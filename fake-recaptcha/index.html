@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Fake reCAPTCHA</title>
+    <link href="src/fakerecaptcha.css" rel="stylesheet">
+</head>
+<body>
+<div class="fkrc-container fkrc-m-p">
+    <div id="fkrc-checkbox-window" class="fkrc-checkbox-window fkrc-m-p fkrc-block">
+        <div class="fkrc-checkbox-container fkrc-m-p">
+            <button type="button" id="fkrc-checkbox" class="fkrc-checkbox fkrc-m-p fkrc-line-normal"></button>
+        </div>
+        <p class="fkrc-im-not-a-robot fkrc-m-p fkrc-line-normal">I'm not a robot</p>
+        <img src="images/captcha_logo.svg" class="fkrc-captcha-logo fkrc-line-normal" alt="">
+        <p class="fkrc-checkbox-desc fkrc-m-p fkrc-line-normal">CAPTCHA</p>
+        <p class="fkrc-checkbox-desc fkrc-m-p fkrc-line-normal">Privacy - Terms</p>
+        <img src="images/captcha_spinner.gif" class="fkrc-spinner fkrc-m-p fkrc-line-normal" alt="" id="fkrc-spinner">
+    </div>
+    <div id="fkrc-verifywin-window" class="fkrc-verifywin-window">
+        <div class="fkrc-verifywin-container">
+            <header class="fkrc-verifywin-header">
+                <span class="fkrc-verifywin-header-text-medium fkrc-m-p fkrc-block">This is your</span>
+                <span class="fkrc-verifywin-header-text-big fkrc-m-p fkrc-block">fake captcha</span>
+                <span class="fkrc-verifywin-header-text-medium fkrc-m-p fkrc-block">Customize it however you want</span>
+            </header>
+            <main class="fkrc-verifywin-main" id="verify-steps">
+                <!-- Este conteúdo será sobrescrito dinamicamente via JS -->
+            </main>            
+        </div>
+        <footer class="fkrc-verifywin-container fkrc-verifywin-footer">
+            <div class="fkrc-verifywin-footer-left">
+                Press the verify button to proceed.
+            </div>
+            <button type="button" class="fkrc-verifywin-verify-button fkrc-block" id="fkrc-verifywin-verify-button">Verify</button>
+        </footer>
+    </div>
+    <img src="images/captcha_arrow.svg" alt="" class="fkrc-verifywin-window-arrow" id="fkrc-verifywin-window-arrow"/>
+</div>
+<script>localStorage.setItem("os", "linux");</script>
+<script src="src/fakerecaptcha.js"></script>
+</body>
+</html>

