@@ -1,62 +1,169 @@
-# ShadowPhish - APT Awareness Toolkit  
+# 🕵️‍♂️ ShadowPhish - APT Awareness Toolkit
 
-Versão: 1.0  
-Autor: Joas A Santos  
+**Versão:** 1.0  
+**Autor:** Joas A Santos
 
-Descrição:
-----------
-ShadowPhish é uma poderosa ferramenta gráfica para simulação de ameaças cibernéticas
-e conscientização sobre APTs (Advanced Persistent Threats), focada em engenharia social, 
-phishing, deepfake e payloads ofensivos para treinamento e demonstração.
+> Simulador visual para conscientização sobre APTs, phishing, engenharia social e ameaças cibernéticas.
 
-Funcionalidades:
-----------------
-✔ Geração de PDF e Macro maliciosos  
-✔ PowerShell evasivo com codificação e compressão  
-✔ VBS com download de shellcode e servidor embutido  
-✔ Sites de phishing prontos e recaptcha falso com pastejack  
-✔ Deepfake de rosto (vídeo) e clonagem de voz (TTS)  
-✔ Payload C2 para Windows, Linux e macOS com shell reversa  
-✔ Cadeia de ataque baseada em APT29, APT41, FIN7  
-✔ Smishing e Vishing via Twilio  
-✔ Gerador de Atalhos LNK maliciosos  
-✔ HTML Smuggling com arquivos base64  
-✔ Simulador de Ransomware e Decryptor  
-✔ Geração de QR Code apontando para link malicioso  
+---
 
-Requisitos:
------------
-- Python 3.10+  
-- MinGW (para compilar payloads Windows)  
-- GCC (Linux/macOS)  
-- PHP (para sites de phishing)  
-- Internet (para deepfake e TTS)  
+## 🔥 Funcionalidades
 
-Instalação:
------------
-1. Instale os requisitos:  
-   `pip install -r requirements.txt`
+- ✅ Geração de PDFs maliciosos
+- ✅ Macros Word com shellcode remoto
+- ✅ PowerShell evasivo com opções de codificação, compressão e IEX
+- ✅ VBS remoto com shellcode + servidor embutido
+- ✅ Sites de phishing prontos (.sites/)
+- ✅ Recaptcha Falso (PasteJack)
+- ✅ Deepfake (FaceFusion) e DeepVoice (TTS)
+- ✅ Geração de Payload C2 para Windows, Linux e macOS
+- ✅ Terminal interativo com listener embutido
+- ✅ Cadeias de ataque APT29, APT41, FIN7
+- ✅ Smishing (SMS) e Vishing (ligação com áudio)
+- ✅ Gerador de LNK malicioso
+- ✅ HTML Smuggling (base64 + download automático ou por clique)
+- ✅ Simulador de Ransomware e Decryptor
+- ✅ Geração de QR Code malicioso
 
-2. Rode a aplicação:  
-   `python main.py`
+---
 
-Pastas:
--------
-- backend/         → Código principal da aplicação  
-- frontend/        → Splash screen e seletor de idioma  
-- .sites/          → Templates HTML para phishing (baseados no projeto Zphisher)  
-- .fake-recaptcha/ → Template para simulação de Recaptcha malicioso  
-- outputs/         → Arquivos gerados  
-- i18n/            → Traduções em JSON  
+## ⚙️ Requisitos
 
-Créditos:
----------
-- Desenvolvido por Joas A Santos  
-- Templates `.sites/` baseados no projeto Zphisher:  
-  🔗 https://github.com/htr-tech/zphisher/tree/master/.sites
+- Python 3.10+
+- PHP (para servidores de phishing)
+- GCC / MinGW
+- ffmpeg + facefusion (para deepfake)
+- Internet (para TTS, APIs)
 
-Licença:
---------
-🔒 Ferramenta destinada **exclusivamente para fins educacionais**, 
-simulações de conscientização e uso ético autorizado.
+Instale as dependências:
+```bash
+pip install -r requirements.txt
+```
 
+---
+
+## 🚀 Como usar
+
+```bash
+python main.py
+```
+
+- Uma splash screen será exibida
+- Selecione o idioma desejado
+- A interface principal será carregada
+
+---
+
+## 📁 Estrutura
+
+```
+.
+├── main.py
+├── backend/           # Código principal
+├── frontend/          # Splash + seletor de idioma
+├── .sites/            # Templates de phishing
+├── .fake-recaptcha/   # Recaptcha falso com payload automático
+├── outputs/           # Arquivos gerados
+├── i18n/              # Traduções em JSON
+└── requirements.txt
+```
+
+---
+
+## 🙏 Créditos
+
+- Desenvolvido por **Joas A Santos**
+- Templates `.sites/` extraídos e adaptados do excelente projeto [Zphisher](https://github.com/htr-tech/zphisher)
+
+---
+
+## ⚠️ Aviso Legal
+
+> Esta ferramenta é **estritamente educacional**, voltada para **conscientização e simulações** de segurança ofensiva.  
+> **Não utilize em ambientes reais sem autorização.**
+
+---
+
+# 🕵️‍♂️ ShadowPhish - APT Awareness Toolkit
+
+**Version:** 1.0  
+**Author:** Joas A Santos
+
+> Visual simulator for cybersecurity awareness, phishing, and APT-based social engineering.
+
+---
+
+## 🔥 Features
+
+- ✅ Malicious PDF generator
+- ✅ Word macro with remote shellcode
+- ✅ PowerShell obfuscation (Base64, IEX, compression, variables)
+- ✅ Remote VBS + embedded HTTP server
+- ✅ Prebuilt phishing websites (.sites/)
+- ✅ Fake Recaptcha (PasteJack style)
+- ✅ Deepfake video (FaceFusion) and DeepVoice TTS
+- ✅ Payload generator for Windows, Linux, macOS
+- ✅ Built-in reverse shell listener with command interface
+- ✅ APT Chains (APT29, APT41, FIN7)
+- ✅ Smishing (SMS) and Vishing (voice call via Twilio)
+- ✅ Malicious LNK shortcut builder
+- ✅ HTML Smuggling generator (Base64 embedded)
+- ✅ Simulated Ransomware + Decryptor
+- ✅ QR Code phishing generator
+
+---
+
+## ⚙️ Requirements
+
+- Python 3.10+
+- PHP (for phishing sites)
+- GCC / MinGW
+- ffmpeg + facefusion
+- Internet access (for DeepVoice and APIs)
+
+Install dependencies:
+```bash
+pip install -r requirements.txt
+```
+
+---
+
+## 🚀 How to Run
+
+```bash
+python main.py
+```
+
+- Animated splash screen will appear
+- Choose your language
+- Toolkit interface will load
+
+---
+
+## 📁 Project Structure
+
+```
+.
+├── main.py
+├── backend/           # Main logic
+├── frontend/          # Splash + language selector
+├── .sites/            # Phishing templates
+├── .fake-recaptcha/   # Fake Recaptcha pastejack
+├── outputs/           # Generated files
+├── i18n/              # Translations
+└── requirements.txt
+```
+
+---
+
+## 🙏 Credits
+
+- Developed by **Joas A Santos**
+- `.sites/` templates inspired and adapted from [Zphisher](https://github.com/htr-tech/zphisher)
+
+---
+
+## ⚠️ Legal Notice
+
+> This toolkit is **strictly for educational and awareness purposes** only.  
+> Do **not use** in real environments without **explicit authorization**.
