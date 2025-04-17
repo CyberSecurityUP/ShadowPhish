@@ -19,7 +19,7 @@ class DarkThemeApp(QMainWindow):
         super().__init__()
         self.face_image_path = ""
         self.target_video_path = ""
-        self.setWindowTitle("APT Awareness Toolkit")
+        self.setWindowTitle("ShadowPhish - APT Awareness Toolkit")
         self.setGeometry(100, 100, 1000, 700)
 
         self.tabs = QTabWidget()
