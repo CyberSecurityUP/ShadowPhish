@@ -80,6 +80,14 @@ python main.py
 
 ---
 
+## ⚠️ Legal Notice
+
+> This toolkit is **strictly for educational and awareness purposes** only.  
+> Do **not use** in real environments without **explicit authorization**.
+
+
+---
+
 # 🕵️‍♂️ ShadowPhish - APT Awareness Toolkit
 
 **Versão:** 1.0  
@@ -167,9 +175,3 @@ python main.py
 > **Não utilize em ambientes reais sem autorização.**
 
 ---
-
-
-## ⚠️ Legal Notice
-
-> This toolkit is **strictly for educational and awareness purposes** only.  
-> Do **not use** in real environments without **explicit authorization**.
