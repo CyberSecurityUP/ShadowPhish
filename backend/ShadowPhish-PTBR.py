@@ -50,8 +50,8 @@ class DarkThemeApp(QMainWindow):
         self.qrcode_tab = QWidget()
 
         self.tabs.addTab(self.artifacts_tab, "Gerar Artefatos Maliciosos")
-        self.tabs.addTab(self.phishing_tab, "Phishing & Spear-Phishing")
-        self.tabs.addTab(self.deepfake_tab, "Deepfake & Deepvoice Awareness")
+        self.tabs.addTab(self.phishing_tab, "Phishing e Spear-Phishing")
+        self.tabs.addTab(self.deepfake_tab, "Deepfake e Deepvoice Awareness")
         self.tabs.addTab(self.c2_tab, "C2 Simulado")
         self.tabs.addTab(self.gsm_tab, "Smishing e Vishing")
         self.tabs.addTab(self.apt_tab, "Templates APT")
