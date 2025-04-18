@@ -5,6 +5,8 @@
 
 > Simulador visual para conscientização sobre APTs, phishing, engenharia social e ameaças cibernéticas.
 
+![image](https://github.com/user-attachments/assets/73703fcb-8dd6-47b1-9e02-4f4f8adf7bb9)
+
 ---
 
 ## 🔥 Funcionalidades
@@ -90,6 +92,8 @@ python main.py
 **Author:** Joas A Santos
 
 > Visual simulator for cybersecurity awareness, phishing, and APT-based social engineering.
+
+![image](https://github.com/user-attachments/assets/7fb46c48-f000-4e6e-832b-3a73e40c9508)
 
 ---
 
