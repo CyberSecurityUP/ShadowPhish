@@ -8,15 +8,15 @@ class ShadowPhishSplash(QSplashScreen):
         self.counter = 0
         self.max_counter = 100
         self.opacity = 0
-        self.current_message = "Inicializando..."
+        self.current_message = "Initializing..."
 
         self.messages = [
-            "Inicializando módulos ofensivos...",
-            "Carregando interface gráfica...",
-            "Iniciando motor de Deepfake...",
-            "Verificando conexões de C2...",
-            "Carregando phishing templates...",
-            "Inicializando toolkit ShadowPhish..."
+            "Initializing offensive modules...",
+            "Loading graphical interface...",
+            "Starting deepfake engine...",
+            "Checking C2 connections...",
+            "Loading phishing templates...",
+            "Booting ShadowPhish toolkit..."
         ]
 
         self.pixmap = QPixmap(800, 400)
@@ -53,25 +53,25 @@ class ShadowPhishSplash(QSplashScreen):
 
         glow = QColor(0, 255, 150, self.opacity)
 
-        # Nome
+        # Title
         title_font = QFont("Consolas", 28, QFont.Bold)
         painter.setFont(title_font)
         painter.setPen(glow)
         painter.drawText(QRect(0, 100, self.pixmap.width(), 50), Qt.AlignCenter, "ShadowPhish")
 
-        # Subtítulo
+        # Subtitle
         sub_font = QFont("Consolas", 14)
         painter.setFont(sub_font)
         painter.setPen(QColor(180, 255, 220, self.opacity))
         painter.drawText(QRect(0, 150, self.pixmap.width(), 30), Qt.AlignCenter, "APT Awareness Toolkit")
 
-        # Mensagem atual
+        # Current message
         msg_font = QFont("Consolas", 10)
         painter.setFont(msg_font)
         painter.setPen(QColor(100, 255, 180, self.opacity))
         painter.drawText(QRect(0, 220, self.pixmap.width(), 20), Qt.AlignCenter, self.current_message)
 
-        # Barra de progresso tipo hacker
+        # Hacker-style progress bar
         bar_width = int((self.counter / self.max_counter) * 600)
         bar_height = 12
         bar_x = (self.pixmap.width() - 600) // 2
@@ -79,10 +79,10 @@ class ShadowPhishSplash(QSplashScreen):
         painter.setBrush(QColor(0, 255, 150, 200))
         painter.drawRect(bar_x, bar_y, bar_width, bar_height)
 
-        # Créditos
+        # Credits
         credit_font = QFont("Consolas", 9)
         painter.setFont(credit_font)
         painter.setPen(QColor(180, 180, 180, self.opacity))
-        painter.drawText(QRect(10, self.pixmap.height() - 35, 300, 20), Qt.AlignLeft, "Desenvolvido por Joas A Santos")
+        painter.drawText(QRect(10, self.pixmap.height() - 35, 300, 20), Qt.AlignLeft, "Developed by Joas A Santos")
 
         painter.drawText(QRect(self.pixmap.width() - 100, self.pixmap.height() - 35, 90, 20), Qt.AlignRight, "v1.0")
