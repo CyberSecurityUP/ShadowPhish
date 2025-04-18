@@ -70,6 +70,16 @@ python main.py
 ├── i18n/              # Translations
 └── requirements.txt
 ```
+---
+## 🚀 Future Work & Improvements
+- Multi-language support: Extend full translation coverage across all features and tooltips, with community-contributed language packs.
+- Integrated reporting system: Generate PDF/HTML reports from simulations for audits, training, or awareness tracking.
+- User role system: Introduce user roles (admin, operator, trainee) for multi-user environments.
+- Phishing campaign builder: Visual editor to simulate full phishing campaigns with delivery scheduling and tracking.
+- Cloud integration: Deploy phishing and payload simulations on isolated cloud environments for remote demonstrations.
+- EDR/AV evasion lab: Create a module that benchmarks payload detection across common security solutions.
+- Simulation scoring system: Automatically evaluate success or failure of simulated APT chains for gamification and training purposes.
+- Plugin SDK: Allow developers to create and integrate custom payloads, phishing templates, or attack vectors.
 
 ---
 
@@ -159,6 +169,17 @@ python main.py
 ├── i18n/              # Traduções em JSON
 └── requirements.txt
 ```
+---
+
+## 🚀 Futuro & Melhorias
+- Suporte multilíngue: Expandir a cobertura de tradução para todas as funcionalidades e dicas, com pacotes de idiomas contribuídos pela comunidade.
+- Sistema de relatórios integrado: Gerar relatórios em PDF/HTML a partir das simulações para auditorias, treinamentos ou registros.
+- Sistema de perfis de usuário: Introduzir papéis como administrador, operador e aprendiz para ambientes multiusuário.
+- Construtor de campanhas de phishing: Editor visual para simular campanhas de phishing completas com agendamento de entrega e rastreamento.
+- Integração com nuvem: Possibilidade de simular phishing e cargas maliciosas em ambientes de nuvem isolados para demonstrações remotas.
+- Laboratório de evasão EDR/AV: Módulo que testa a detecção dos payloads em soluções de segurança populares.
+- Sistema de pontuação de simulação: Avaliação automática de sucesso ou falha das cadeias APT para gamificação e treinamentos.
+- SDK para Plugins: Permitir que desenvolvedores criem e integrem payloads, templates de phishing ou vetores de ataque personalizados.
 
 ---
 
