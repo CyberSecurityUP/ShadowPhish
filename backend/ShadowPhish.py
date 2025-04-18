@@ -12,6 +12,10 @@ import os
 import subprocess
 import threading
 import socket
+# Garante que o diretório raiz esteja no path
+BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+if BASE_DIR not in sys.path:
+    sys.path.insert(0, BASE_DIR)
 from frontend.splash_screen import ShadowPhishSplash
 from PySide2.QtCore import QTimer
 
@@ -23,7 +27,7 @@ class DarkThemeApp(QMainWindow):
         self.translations = translations or {}
         self.face_image_path = ""
         self.target_video_path = ""
-        self.setWindowTitle("APT Awareness Toolkit")
+        self.setWindowTitle("ShadowPhish - APT Awareness Toolkit")
         self.setGeometry(100, 100, 1000, 700)
 
         self.tabs = QTabWidget()
@@ -1852,4 +1856,3 @@ if __name__ == "__main__":
     QTimer.singleShot(2500, start_main)
 
     sys.exit(app.exec_())
-
