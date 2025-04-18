@@ -10,7 +10,6 @@ if __name__ == "__main__":
     splash = SplashInicial()
     splash.show()
 
-    # Adicione uma variável global para manter a janela viva
     global lang_selector_window
     lang_selector_window = None
 
