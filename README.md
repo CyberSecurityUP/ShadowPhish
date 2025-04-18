@@ -75,7 +75,7 @@ python main.py
 
 ## 🙏 Credits
 
-- Developed by **Joas A Santos**
+- Developed by [Joas A Santos](https://www.linkedin.com/in/joas-antonio-dos-santos/)
 - `.sites/` templates inspired and adapted from [Zphisher](https://github.com/htr-tech/zphisher)
 
 ---
@@ -164,7 +164,7 @@ python main.py
 
 ## 🙏 Créditos
 
-- Desenvolvido por **Joas A Santos**
+- Desenvolvido por [Joas A Santos](https://www.linkedin.com/in/joas-antonio-dos-santos/)
 - Templates `.sites/` extraídos e adaptados do excelente projeto [Zphisher](https://github.com/htr-tech/zphisher)
 
 ---
